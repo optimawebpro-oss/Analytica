@@ -1313,32 +1313,6 @@ details.api-help summary::-webkit-details-marker{display:none}
   .apikey-box{flex-direction:column;align-items:flex-start}
 }
 
-/* ── SCROLL 3D / CINEMATIC EFFECTS ── */
-.scroll-reveal {
-  opacity: 0;
-  transform: perspective(800px) rotateX(25deg) translateY(60px);
-  transition: opacity .7s cubic-bezier(.22,1,.36,1), transform .7s cubic-bezier(.22,1,.36,1);
-}
-.scroll-reveal.visible {
-  opacity: 1;
-  transform: perspective(800px) rotateX(0deg) translateY(0);
-}
-
-@keyframes glitch {
-  0%   { text-shadow: 2px 0 #f97316, -2px 0 #06b6d4; }
-  20%  { text-shadow: -2px 0 #f97316, 2px 0 #06b6d4; clip-path: inset(20% 0 60% 0); }
-  40%  { text-shadow: 2px 0 #f97316, -2px 0 #06b6d4; clip-path: inset(70% 0 10% 0); }
-  60%  { text-shadow: none; }
-  100% { text-shadow: none; }
-}
-.glitch-flash { animation: glitch .4s steps(1) forwards; }
-
-#tunnelOverlay {
-  position: fixed; inset: 0; pointer-events: none; z-index: 5;
-  background: radial-gradient(circle at center, transparent var(--r,60%), rgba(5,12,26,.95) calc(var(--r,60%) + 8%));
-  transition: none;
-}
-
 /* ── WHITE LABEL PAGE ── */
 .wl-section{background:var(--glass);border:1px solid var(--border);border-radius:var(--r-xl);padding:1.5rem;margin-bottom:1.25rem}
 .wl-step{font-size:1rem;font-weight:700;color:var(--t100);margin:0 0 1.25rem;display:flex;align-items:center;gap:.5rem}

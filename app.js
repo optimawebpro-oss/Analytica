@@ -288,8 +288,6 @@ async function fetchUserPlan() {
     const data = await apiRequest('/api/me');
     state.userPlan = data.plan || 'gratuit';
     updatePlanBadge(data);
-    const navWl = document.getElementById('navWhitelabel');
-    if (navWl) navWl.style.display = state.userPlan === 'entreprise' ? '' : 'none';
   } catch {
     state.userPlan = 'gratuit';
   }

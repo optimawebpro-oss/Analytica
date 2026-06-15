@@ -39,7 +39,7 @@
       <span class="nav-link"        data-page="pricing" onclick="showPage('pricing')">Tarifs</span>
       <span class="nav-link"        data-page="partners" onclick="showPage('partners')">Partenaires</span>
       <span class="nav-link"        data-page="contact" onclick="showPage('contact')">Contact</span>
-      <a class="nav-link" onclick="showPage('whitelabel')" id="navWhitelabel" style="display:none">🎨 Site personnalisé</a>
+      <a class="nav-link" onclick="showPage('whitelabel')" id="navWhitelabel">🎨 Site personnalisé</a>
     </div>
     <div class="nav-right">
       <div id="navLoggedOut" style="display:flex;gap:.5rem;align-items:center">
@@ -1300,110 +1300,5 @@
   </div>
 </div>
 
-<!-- ══════════════════════════════════════
-     SCROLL 3D / CINEMATIC EFFECTS
-══════════════════════════════════════ -->
-<div id="tunnelOverlay"></div>
-<script>
-(function() {
-  // Cache DOM refs
-  const heroTitle = document.querySelector('.hero-title');
-  const heroBg    = document.querySelector('.hero-blobs');
-  const heroCard  = document.querySelector('.hero-card-wrap');
-  const metricEls = document.querySelectorAll('.hc-metric');
-  const tunnel    = document.getElementById('tunnelOverlay');
-
-  // ── rAF scroll handler ──
-  let ticking = false;
-  function onScroll() {
-    if (!ticking) { requestAnimationFrame(update); ticking = true; }
-  }
-
-  function update() {
-    const sy       = window.scrollY;
-    const ih       = window.innerHeight;
-    const progress = Math.min(sy / ih, 1);
-
-    // Effect 1 — Hero zoom-through
-    if (heroTitle) {
-      heroTitle.style.transform = `scale(${1 + progress * 7})`;
-      heroTitle.style.opacity   = `${Math.max(0, 1 - progress * 1.5)}`;
-    }
-    if (heroBg) {
-      heroBg.style.transform = `translateZ(0) scale(${1 + progress * 0.15})`;
-    }
-
-    // Effect 3 — Parallax on hero card
-    if (heroCard) {
-      heroCard.style.transform = `translateY(${-sy * 0.3}px)`;
-    }
-
-    // Effect 5 — Horizontal parallax on stats
-    metricEls.forEach((el, i) => {
-      const dir = i % 2 === 0 ? 1 : -1;
-      el.style.transform = `translateX(${dir * sy * 0.04 * (i + 1)}px)`;
-    });
-
-    // Effect 6 — Tunnel overlay
-    if (tunnel) {
-      const heroH     = ih;
-      const tunnelStart = heroH * 0.6;
-      const tunnelEnd   = heroH * 0.9;
-      if (sy < tunnelStart) {
-        tunnel.style.setProperty('--r', '100%');
-      } else if (sy > tunnelEnd) {
-        tunnel.style.setProperty('--r', '100%');
-      } else {
-        const t = (sy - tunnelStart) / (tunnelEnd - tunnelStart);
-        // shrink from 100% to 0% at midpoint (0.5), then expand back
-        const r = t < 0.5
-          ? 100 - t * 2 * 100
-          : (t - 0.5) * 2 * 100;
-        tunnel.style.setProperty('--r', r + '%');
-      }
-    }
-
-    ticking = false;
-  }
-
-  window.addEventListener('scroll', onScroll, { passive: true });
-
-  // ── Effect 2 — Section reveal with 3D tilt ──
-  const revealObs = new IntersectionObserver(entries => {
-    entries.forEach(e => {
-      if (e.isIntersecting) {
-        e.target.classList.add('visible');
-        revealObs.unobserve(e.target);
-      }
-    });
-  }, { threshold: 0.15 });
-
-  document.querySelectorAll('.feat-card,.case-card,.pricing-card,.integ-card,.partner-card,.faq-item,.sec-label').forEach(el => {
-    el.classList.add('scroll-reveal');
-    revealObs.observe(el);
-  });
-
-  // ── Effect 4 — Glitch flash on section headings ──
-  const glitchObs = new IntersectionObserver(entries => {
-    entries.forEach(e => {
-      if (e.isIntersecting) {
-        const h2 = e.target.querySelector('h2');
-        if (h2) {
-          h2.classList.remove('glitch-flash');
-          void h2.offsetWidth; // force reflow
-          h2.classList.add('glitch-flash');
-          setTimeout(() => h2.classList.remove('glitch-flash'), 500);
-        }
-        glitchObs.unobserve(e.target);
-      }
-    });
-  }, { threshold: 0.3 });
-
-  document.querySelectorAll('#features, #pricing, #cases, .section').forEach(el => {
-    glitchObs.observe(el);
-  });
-
-})();
-</script>
 </body>
 </html>
