@@ -683,48 +683,53 @@
 
 <!-- MODAL SIGNATURE -->
 <div id="signatureModal" class="modal-overlay" style="display:none" onclick="if(event.target===this)closeSignatureModal()">
-  <div class="modal-box" style="max-width:500px">
+  <div class="modal-box" style="max-width:520px">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem">
       <div>
         <h3 style="margin:0 0 .2rem">✍️ Nouvelle signature</h3>
-        <p style="font-size:.8rem;color:var(--t400);margin:0">Ajoutée automatiquement en bas de vos documents générés</p>
+        <p style="font-size:.8rem;color:var(--t400);margin:0">Importez votre signature manuscrite — placée en bas de vos documents</p>
       </div>
       <button onclick="closeSignatureModal()" style="background:none;border:none;color:var(--t400);font-size:1.2rem;cursor:pointer;padding:.25rem">✕</button>
     </div>
 
+    <!-- Upload image signature -->
+    <div class="form-field" style="margin-bottom:1.25rem">
+      <label style="display:block;font-size:.82rem;font-weight:600;color:var(--t200);margin-bottom:.5rem">Image de signature <span style="color:var(--orange)">*</span></label>
+      <div class="upload-zone" style="padding:1.25rem;cursor:pointer" onclick="document.getElementById('sigImageInput').click()"
+        ondragover="event.preventDefault()" ondrop="handleSigImageDrop(event)">
+        <div id="sigImagePreviewWrap" style="display:none;text-align:center">
+          <img id="sigImagePreview" style="max-height:100px;max-width:100%;filter:invert(1) brightness(2)" alt="Aperçu signature">
+          <p style="font-size:.75rem;color:var(--t500);margin:.5rem 0 0">Cliquez pour changer</p>
+        </div>
+        <div id="sigImagePlaceholder">
+          <div class="uz-icon" style="font-size:1.75rem">✍️</div>
+          <p class="uz-main">Glissez votre signature ou cliquez</p>
+          <p class="uz-formats">PNG · JPG · WEBP — fond blanc ou transparent</p>
+        </div>
+      </div>
+      <input type="file" id="sigImageInput" accept="image/png,image/jpeg,image/webp" style="display:none" onchange="handleSigImageSelect(event)">
+    </div>
+
+    <!-- Infos optionnelles -->
     <div class="form-grid-2" style="margin-bottom:1rem">
       <div class="form-field">
-        <label style="display:block;font-size:.82rem;font-weight:600;color:var(--t200);margin-bottom:.5rem">Nom complet <span style="color:var(--orange)">*</span></label>
+        <label style="display:block;font-size:.82rem;font-weight:600;color:var(--t200);margin-bottom:.5rem">Nom (optionnel)</label>
         <input type="text" class="form-input" id="sigName" placeholder="Jean Dupont">
       </div>
       <div class="form-field">
-        <label style="display:block;font-size:.82rem;font-weight:600;color:var(--t200);margin-bottom:.5rem">Poste</label>
+        <label style="display:block;font-size:.82rem;font-weight:600;color:var(--t200);margin-bottom:.5rem">Poste (optionnel)</label>
         <input type="text" class="form-input" id="sigTitle" placeholder="Directeur Commercial">
-      </div>
-    </div>
-    <div class="form-grid-2" style="margin-bottom:1rem">
-      <div class="form-field">
-        <label style="display:block;font-size:.82rem;font-weight:600;color:var(--t200);margin-bottom:.5rem">Entreprise</label>
-        <input type="text" class="form-input" id="sigCompany" placeholder="TechCorp SAS">
-      </div>
-      <div class="form-field">
-        <label style="display:block;font-size:.82rem;font-weight:600;color:var(--t200);margin-bottom:.5rem">Email</label>
-        <input type="email" class="form-input" id="sigEmail" placeholder="jean@techcorp.fr">
       </div>
     </div>
     <div class="form-grid-2" style="margin-bottom:1.25rem">
       <div class="form-field">
-        <label style="display:block;font-size:.82rem;font-weight:600;color:var(--t200);margin-bottom:.5rem">Téléphone</label>
-        <input type="text" class="form-input" id="sigPhone" placeholder="+33 6 00 00 00 00">
+        <label style="display:block;font-size:.82rem;font-weight:600;color:var(--t200);margin-bottom:.5rem">Entreprise (optionnel)</label>
+        <input type="text" class="form-input" id="sigCompany" placeholder="TechCorp SAS">
       </div>
       <div class="form-field">
-        <label style="display:block;font-size:.82rem;font-weight:600;color:var(--t200);margin-bottom:.5rem">Site web</label>
-        <input type="text" class="form-input" id="sigWebsite" placeholder="www.techcorp.fr">
+        <label style="display:block;font-size:.82rem;font-weight:600;color:var(--t200);margin-bottom:.5rem">Email (optionnel)</label>
+        <input type="email" class="form-input" id="sigEmail" placeholder="jean@techcorp.fr">
       </div>
-    </div>
-
-    <div id="signaturePreview" style="background:var(--bg2);border:1px solid var(--border);border-radius:.5rem;padding:.85rem 1rem;font-size:.8rem;color:var(--t300);line-height:1.7;margin-bottom:1.25rem;min-height:60px">
-      <em style="color:var(--t500)">L'aperçu apparaît ici…</em>
     </div>
 
     <div id="signatureModalError" style="display:none;font-size:.82rem;color:var(--red);margin-bottom:.75rem"></div>

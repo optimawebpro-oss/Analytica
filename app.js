@@ -1372,42 +1372,26 @@ Réponds en français. Si l'utilisateur demande une génération de document, g�
 }
 
 // ── SIGNATURES ────────────────────────────────────────────
+let _sigImageBase64 = '';
+
 function loadSignatures() {
   try { return JSON.parse(localStorage.getItem('archiva_signatures') || '[]'); } catch { return []; }
 }
 function saveSignaturesStore(arr) { localStorage.setItem('archiva_signatures', JSON.stringify(arr)); }
-
-function buildSignatureText(sig) {
-  const lines = [];
-  if (sig.name)    lines.push(sig.name + (sig.title ? ` — ${sig.title}` : ''));
-  if (sig.company) lines.push(sig.company);
-  if (sig.email)   lines.push(sig.email);
-  if (sig.phone)   lines.push(sig.phone);
-  if (sig.website) lines.push(sig.website);
-  return lines.join('\n');
-}
+function getActiveSignature() { return loadSignatures().find(s => s.active) || null; }
 
 function renderSignatureBlock(sig) {
-  const initials = sig.name.split(' ').map(w => w[0]).join('').slice(0,2).toUpperCase();
-  return `
-<div style="margin-top:2.5rem;padding-top:1.5rem;border-top:2px solid rgba(249,115,22,.3)">
-  <div style="display:flex;align-items:center;gap:1rem">
-    <div style="width:48px;height:48px;border-radius:50%;background:linear-gradient(135deg,#f97316,#ea580c);display:flex;align-items:center;justify-content:center;font-size:1.1rem;font-weight:700;color:#fff;flex-shrink:0">${escHtml(initials)}</div>
-    <div>
-      <div style="font-size:1rem;font-weight:700;color:var(--t100)">${escHtml(sig.name)}${sig.title ? `<span style="font-weight:400;color:var(--t400);font-size:.875rem"> — ${escHtml(sig.title)}</span>` : ''}</div>
-      ${sig.company ? `<div style="font-size:.82rem;color:var(--orange);font-weight:600;margin-top:.1rem">${escHtml(sig.company)}</div>` : ''}
-      <div style="display:flex;flex-wrap:wrap;gap:.75rem;margin-top:.35rem">
-        ${sig.email   ? `<span style="font-size:.78rem;color:var(--t400)">✉ ${escHtml(sig.email)}</span>` : ''}
-        ${sig.phone   ? `<span style="font-size:.78rem;color:var(--t400)">📞 ${escHtml(sig.phone)}</span>` : ''}
-        ${sig.website ? `<span style="font-size:.78rem;color:var(--t400)">🌐 ${escHtml(sig.website)}</span>` : ''}
-      </div>
-    </div>
-  </div>
-</div>`;
-}
+  const info = [
+    sig.name  ? `<strong>${escHtml(sig.name)}</strong>${sig.title ? ` — ${escHtml(sig.title)}` : ''}` : '',
+    sig.company ? escHtml(sig.company) : '',
+    sig.email   ? escHtml(sig.email)   : '',
+  ].filter(Boolean).join('<br>');
 
-function getActiveSignature() {
-  return loadSignatures().find(s => s.active) || null;
+  return `
+<div style="margin-top:2.5rem;padding-top:1.5rem;border-top:1px solid rgba(249,115,22,.25)">
+  <img src="${sig.image}" alt="Signature" style="max-height:80px;max-width:220px;display:block;margin-bottom:.5rem;mix-blend-mode:multiply;opacity:.9">
+  ${info ? `<div style="font-size:.8rem;color:var(--t400);line-height:1.6">${info}</div>` : ''}
+</div>`;
 }
 
 function renderSignatures() {
@@ -1417,14 +1401,15 @@ function renderSignatures() {
   const list = document.getElementById('signaturesList');
   if (!list) return;
   if (!sigs.length) {
-    list.innerHTML = '<p style="font-size:.8rem;color:var(--t500);margin:.25rem 0 .5rem">Aucune signature. Cliquez sur ➕ pour en créer une.</p>';
+    list.innerHTML = '<p style="font-size:.8rem;color:var(--t500);margin:.25rem 0 .5rem">Aucune signature. Cliquez sur ➕ pour en ajouter une.</p>';
     return;
   }
   list.innerHTML = sigs.map(s => `
-    <div style="background:var(--bg2);border:1px solid ${s.active ? 'var(--orange)' : 'var(--border)'};border-radius:.5rem;padding:.65rem .9rem;display:flex;align-items:center;gap:.75rem">
+    <div style="background:var(--bg2);border:1px solid ${s.active ? 'var(--orange)' : 'var(--border)'};border-radius:.5rem;padding:.6rem .9rem;display:flex;align-items:center;gap:.75rem">
+      <img src="${s.image}" alt="sig" style="height:36px;max-width:90px;object-fit:contain;opacity:.85;mix-blend-mode:multiply;flex-shrink:0">
       <div style="flex:1;min-width:0">
-        <div style="font-size:.85rem;font-weight:600;color:var(--t100)">${escHtml(s.name)}${s.title ? ` <span style="font-weight:400;color:var(--t400)">— ${escHtml(s.title)}</span>` : ''}</div>
-        <div style="font-size:.74rem;color:var(--t500);margin-top:.15rem">${[s.company, s.email].filter(Boolean).map(escHtml).join(' · ')}</div>
+        <div style="font-size:.83rem;font-weight:600;color:var(--t100)">${escHtml(s.name || 'Signature')}</div>
+        ${s.company ? `<div style="font-size:.73rem;color:var(--t500)">${escHtml(s.company)}</div>` : ''}
       </div>
       <div style="display:flex;align-items:center;gap:.5rem;flex-shrink:0">
         ${s.active
@@ -1441,59 +1426,64 @@ function toggleSignatures() {
 }
 
 function openSignatureModal() {
-  ['sigName','sigTitle','sigCompany','sigEmail','sigPhone','sigWebsite'].forEach(id => {
-    const el = document.getElementById(id);
-    if (el) el.value = '';
-  });
+  _sigImageBase64 = '';
+  ['sigName','sigTitle','sigCompany','sigEmail'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
   document.getElementById('signatureModalError').style.display = 'none';
-  document.getElementById('signaturePreview').innerHTML = '<em style="color:var(--t500)">L\'aperçu apparaît ici…</em>';
-  ['sigName','sigTitle','sigCompany','sigEmail','sigPhone','sigWebsite'].forEach(id => {
-    document.getElementById(id)?.addEventListener('input', updateSignaturePreview);
-  });
+  document.getElementById('sigImagePreviewWrap').style.display  = 'none';
+  document.getElementById('sigImagePlaceholder').style.display  = '';
+  document.getElementById('sigImageInput').value = '';
   document.getElementById('signatureModal').style.display = 'flex';
-  setTimeout(() => document.getElementById('sigName').focus(), 80);
-}
-
-function updateSignaturePreview() {
-  const sig = {
-    name: document.getElementById('sigName').value.trim(),
-    title: document.getElementById('sigTitle').value.trim(),
-    company: document.getElementById('sigCompany').value.trim(),
-    email: document.getElementById('sigEmail').value.trim(),
-    phone: document.getElementById('sigPhone').value.trim(),
-    website: document.getElementById('sigWebsite').value.trim(),
-  };
-  const text = buildSignatureText(sig);
-  document.getElementById('signaturePreview').innerHTML = text
-    ? text.split('\n').map(l => `<div>${escHtml(l)}</div>`).join('')
-    : '<em style="color:var(--t500)">L\'aperçu apparaît ici…</em>';
 }
 
 function closeSignatureModal() {
   document.getElementById('signatureModal').style.display = 'none';
 }
 
+function handleSigImageSelect(event) {
+  const file = event.target.files?.[0];
+  if (file) loadSigImage(file);
+}
+
+function handleSigImageDrop(event) {
+  event.preventDefault();
+  const file = event.dataTransfer.files?.[0];
+  if (file) loadSigImage(file);
+}
+
+function loadSigImage(file) {
+  const reader = new FileReader();
+  reader.onload = e => {
+    _sigImageBase64 = e.target.result;
+    document.getElementById('sigImagePreview').src     = _sigImageBase64;
+    document.getElementById('sigImagePreviewWrap').style.display = '';
+    document.getElementById('sigImagePlaceholder').style.display = 'none';
+  };
+  reader.readAsDataURL(file);
+}
+
 function saveSignature() {
-  const name = document.getElementById('sigName').value.trim();
   const errEl = document.getElementById('signatureModalError');
   errEl.style.display = 'none';
-  if (!name) { errEl.textContent = 'Le nom est requis.'; errEl.style.display = 'block'; return; }
-
+  if (!_sigImageBase64) {
+    errEl.textContent = 'Veuillez importer une image de signature.';
+    errEl.style.display = 'block';
+    return;
+  }
+  const name = document.getElementById('sigName').value.trim();
   const sigs = loadSignatures().map(s => ({ ...s, active: false }));
   sigs.unshift({
     id:      Date.now(),
+    image:   _sigImageBase64,
     name,
     title:   document.getElementById('sigTitle').value.trim(),
     company: document.getElementById('sigCompany').value.trim(),
     email:   document.getElementById('sigEmail').value.trim(),
-    phone:   document.getElementById('sigPhone').value.trim(),
-    website: document.getElementById('sigWebsite').value.trim(),
     active:  true,
   });
   saveSignaturesStore(sigs);
   renderSignatures();
   closeSignatureModal();
-  showNotif(`✍️ Signature "${name}" créée et activée.`);
+  showNotif('✍️ Signature enregistrée et activée.');
 }
 
 function activateSignature(id) {
