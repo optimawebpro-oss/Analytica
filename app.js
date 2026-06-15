@@ -51,13 +51,19 @@ document.addEventListener('DOMContentLoaded', () => {
     if (wl.colors?.secondary) r.setProperty('--indigo',  wl.colors.secondary);
     if (wl.colors?.bg)        r.setProperty('--bg1',     wl.colors.bg);
     if (wl.font) r.setProperty('--font', wl.font);
-    document.querySelectorAll('.brand-name, .nav-logo span, .hero-title .gradient-text').forEach(el => {
-      if (el.dataset.brand !== 'skip') el.textContent = wl.name;
-    });
+    // Replace every text node containing "Archiva" with the client name
+    const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, null);
+    const skipTags = new Set(['SCRIPT','STYLE','NOSCRIPT']);
+    let node;
+    while ((node = walker.nextNode())) {
+      if (skipTags.has(node.parentElement?.tagName)) continue;
+      if (node.nodeValue.includes('Archiva')) {
+        node.nodeValue = node.nodeValue.replace(/Archiva/g, wl.name);
+      }
+    }
     document.title = wl.name + ' — Intelligence Documentaire';
     const metaDesc = document.querySelector('meta[name="description"]');
-    if (metaDesc && wl.heroDesc) metaDesc.content = wl.heroDesc;
-    // Hide whitelabel nav item in subdomain sites
+    if (metaDesc) metaDesc.content = (wl.heroDesc || wl.tagline || wl.name + ' — Intelligence Documentaire');
     const navWl = document.getElementById('navWhitelabel');
     if (navWl) navWl.style.display = 'none';
   }
