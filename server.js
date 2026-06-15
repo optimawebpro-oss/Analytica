@@ -282,8 +282,54 @@ app.post('/api/integ/gsheets', wrap(async (req, res) => {
   res.json({ success: true });
 }));
 
+// ── WHITE LABEL ────────────────────────────────────────────
+const whitelabelConfigs = new Map(); // subdomain -> config
+
+app.post('/api/whitelabel/create', requireAuth, wrap(async (req, res) => {
+  const { name, subdomain, tagline, heroDesc, ctaText, email, lang, font, logoStyle, colors } = req.body;
+  if (!name || !subdomain) return res.status(400).json({ error: 'Nom et sous-domaine requis.' });
+  if (!/^[a-z0-9-]{2,32}$/.test(subdomain)) return res.status(400).json({ error: 'Sous-domaine invalide.' });
+
+  // Check plan — user must have entreprise
+  const planData = userPlans.get(req.userId);
+  if (!planData || planData.plan !== 'entreprise') {
+    return res.status(403).json({ error: 'Réservé au plan Entreprise.' });
+  }
+
+  whitelabelConfigs.set(subdomain, {
+    name, tagline: tagline || '', heroDesc: heroDesc || '', ctaText: ctaText || 'Démarrer gratuitement',
+    email: email || '', lang: lang || 'fr', font: font || 'Inter', logoStyle: logoStyle || 'text',
+    colors: colors || { primary: '#f97316', secondary: '#6366f1', bg: '#050c1a' },
+    createdBy: req.userId, createdAt: new Date().toISOString(),
+  });
+
+  const appUrl = process.env.APP_URL || 'archiva.app';
+  const host   = appUrl.replace(/^https?:\/\//, '').replace(/\/$/, '');
+  res.json({ success: true, url: `${subdomain}.${host}` });
+}));
+
+app.get('/api/whitelabel/config', (req, res) => {
+  const host      = req.headers.host || '';
+  const subdomain = host.split('.')[0];
+  const config    = whitelabelConfigs.get(subdomain);
+  if (!config) return res.json({ whitelabel: false });
+  res.json({ whitelabel: true, config });
+});
+
 // Fallback SPA
 app.get('*', (req, res) => {
+  const host      = req.headers.host || '';
+  const subdomain = host.split('.')[0];
+  const wlConfig  = whitelabelConfigs.get(subdomain);
+  if (wlConfig) {
+    // Serve index.html with white label meta injected
+    let html = fs.readFileSync(path.join(__dirname, 'index.html'), 'utf8');
+    const safeJson = JSON.stringify(wlConfig).replace(/</g,'\\u003c');
+    html = html.replace('</head>', `<script>window.__WL__=${safeJson};</script></head>`);
+    // Hide the whitelabel page in generated sites
+    html = html.replace('id="page-whitelabel"', 'id="page-whitelabel" style="display:none!important"');
+    return res.send(html);
+  }
   res.sendFile(path.join(__dirname, 'index.html'));
 });
 

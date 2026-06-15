@@ -46,6 +46,25 @@ function clearLibrary() {
 
 // ── INIT ───────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
+  // Apply white label config if running on subdomain
+  if (window.__WL__) {
+    const wl = window.__WL__;
+    const r  = document.documentElement.style;
+    if (wl.colors?.primary)   r.setProperty('--orange',  wl.colors.primary);
+    if (wl.colors?.secondary) r.setProperty('--indigo',  wl.colors.secondary);
+    if (wl.colors?.bg)        r.setProperty('--bg1',     wl.colors.bg);
+    if (wl.font) r.setProperty('--font', wl.font);
+    document.querySelectorAll('.brand-name, .nav-logo span, .hero-title .gradient-text').forEach(el => {
+      if (el.dataset.brand !== 'skip') el.textContent = wl.name;
+    });
+    document.title = wl.name + ' — Intelligence Documentaire';
+    const metaDesc = document.querySelector('meta[name="description"]');
+    if (metaDesc && wl.heroDesc) metaDesc.content = wl.heroDesc;
+    // Hide whitelabel nav item in subdomain sites
+    const navWl = document.getElementById('navWhitelabel');
+    if (navWl) navWl.style.display = 'none';
+  }
+
   const saved     = sessionStorage.getItem('archiva_key');
   const savedProv = sessionStorage.getItem('archiva_provider');
   if (saved) {
@@ -268,6 +287,8 @@ async function fetchUserPlan() {
     const data = await apiRequest('/api/me');
     state.userPlan = data.plan || 'gratuit';
     updatePlanBadge(data);
+    const navWl = document.getElementById('navWhitelabel');
+    if (navWl) navWl.style.display = state.userPlan === 'entreprise' ? '' : 'none';
   } catch {
     state.userPlan = 'gratuit';
   }
@@ -1520,4 +1541,98 @@ function markdownToHtml(md) {
 
 function escHtml(str) {
   return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ── WHITE LABEL ────────────────────────────────────────────
+function sanitizeSubdomain() {
+  const inp = document.getElementById('wlSubdomain');
+  inp.value = inp.value.toLowerCase().replace(/[^a-z0-9-]/g, '').slice(0, 32);
+}
+
+function syncColorFromHex(key) {
+  const hex = document.getElementById('wlColor' + key + 'Hex').value;
+  if (/^#[0-9a-f]{6}$/i.test(hex)) {
+    document.getElementById('wlColor' + key).value = hex;
+    updateWlPreview();
+  }
+}
+
+function applyWlTheme(primary, secondary, bg) {
+  document.getElementById('wlColorPrimary').value     = primary;
+  document.getElementById('wlColorPrimaryHex').value  = primary;
+  document.getElementById('wlColorSecondary').value   = secondary;
+  document.getElementById('wlColorSecondaryHex').value = secondary;
+  document.getElementById('wlColorBg').value          = bg;
+  document.getElementById('wlColorBgHex').value       = bg;
+  updateWlPreview();
+}
+
+function updateWlPreview() {
+  const name      = document.getElementById('wlName')?.value || 'MonSite';
+  const tagline   = document.getElementById('wlTagline')?.value || 'L\'IA documentaire de votre entreprise';
+  const primary   = document.getElementById('wlColorPrimary')?.value   || '#f97316';
+  const secondary = document.getElementById('wlColorSecondary')?.value || '#6366f1';
+  const bg        = document.getElementById('wlColorBg')?.value        || '#050c1a';
+  const ctaText   = document.getElementById('wlCtaText')?.value        || 'Démarrer gratuitement';
+  const heroDesc  = document.getElementById('wlHeroDesc')?.value       || '';
+  // sync hex inputs
+  document.getElementById('wlColorPrimaryHex').value   = primary;
+  document.getElementById('wlColorSecondaryHex').value = secondary;
+  document.getElementById('wlColorBgHex').value        = bg;
+  // update preview
+  const inner = document.getElementById('wlPreviewInner');
+  if (inner) inner.style.background = bg;
+  const logo = document.getElementById('wlPreviewLogo');
+  if (logo) { logo.textContent = name; logo.style.color = primary; }
+  const gradient = document.getElementById('wlPreviewGradient');
+  if (gradient) gradient.style.background = `linear-gradient(135deg,${primary},${secondary})`;
+  const sub = document.getElementById('wlPreviewSub');
+  if (sub) sub.textContent = heroDesc || tagline;
+  const cta = document.getElementById('wlPreviewCta');
+  if (cta) { cta.textContent = ctaText || 'Démarrer gratuitement'; cta.style.background = primary; }
+}
+
+async function generateWhitelabel() {
+  const name      = document.getElementById('wlName')?.value.trim();
+  const subdomain = document.getElementById('wlSubdomain')?.value.trim();
+  const statusEl  = document.getElementById('wlStatus');
+  const resultEl  = document.getElementById('wlResult');
+  if (!name)      { showNotif('Le nom du site est requis.'); return; }
+  if (!subdomain) { showNotif('Le sous-domaine est requis.'); return; }
+  if (!/^[a-z0-9-]{2,32}$/.test(subdomain)) { showNotif('Sous-domaine invalide (lettres minuscules, chiffres, tirets).'); return; }
+
+  statusEl.textContent = '⏳ Génération en cours…';
+  const config = {
+    name,
+    subdomain,
+    tagline:   document.getElementById('wlTagline')?.value.trim()   || '',
+    email:     document.getElementById('wlEmail')?.value.trim()     || '',
+    heroDesc:  document.getElementById('wlHeroDesc')?.value.trim()  || '',
+    ctaText:   document.getElementById('wlCtaText')?.value.trim()   || 'Démarrer gratuitement',
+    lang:      document.getElementById('wlLang')?.value             || 'fr',
+    font:      document.getElementById('wlFont')?.value             || 'Inter',
+    logoStyle: document.getElementById('wlLogoStyle')?.value        || 'text',
+    colors: {
+      primary:   document.getElementById('wlColorPrimary')?.value   || '#f97316',
+      secondary: document.getElementById('wlColorSecondary')?.value || '#6366f1',
+      bg:        document.getElementById('wlColorBg')?.value        || '#050c1a',
+    },
+  };
+
+  try {
+    const token = localStorage.getItem('kinde_access_token') || '';
+    const res   = await fetch('/api/whitelabel/create', {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
+      body:    JSON.stringify(config),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Erreur serveur');
+    statusEl.textContent = '';
+    resultEl.style.display = 'block';
+    document.getElementById('wlResultUrl').textContent = data.url;
+    document.getElementById('wlResultUrl').href        = 'https://' + data.url;
+  } catch (err) {
+    statusEl.textContent = '✗ ' + err.message;
+  }
 }

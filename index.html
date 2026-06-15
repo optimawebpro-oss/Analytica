@@ -39,6 +39,7 @@
       <span class="nav-link"        data-page="pricing" onclick="showPage('pricing')">Tarifs</span>
       <span class="nav-link"        data-page="partners" onclick="showPage('partners')">Partenaires</span>
       <span class="nav-link"        data-page="contact" onclick="showPage('contact')">Contact</span>
+      <a class="nav-link" onclick="showPage('whitelabel')" id="navWhitelabel" style="display:none">🎨 Site personnalisé</a>
     </div>
     <div class="nav-right">
       <div id="navLoggedOut" style="display:flex;gap:.5rem;align-items:center">
@@ -900,5 +901,259 @@
 </div>
 
 <script src="app.js"></script>
+
+<!-- ══════════════════════════════════════
+     PAGE : WHITE LABEL
+══════════════════════════════════════ -->
+<div class="page" id="page-whitelabel">
+  <div style="max-width:860px;margin:0 auto;padding:2rem 1.5rem">
+
+    <div class="sec-label" style="margin-bottom:1rem"><span class="dot"></span>Plan Entreprise</div>
+    <h1 style="font-size:2rem;margin-bottom:.5rem">Site <span class="gradient-text">personnalisé</span></h1>
+    <p style="color:var(--t400);margin-bottom:2.5rem">Créez votre propre version d'Archiva à votre image. Votre site sera accessible sur votre sous-domaine dédié.</p>
+
+    <!-- Step 1: Identity -->
+    <div class="wl-section">
+      <h3 class="wl-step">① Identité</h3>
+      <div class="form-grid-2">
+        <div class="form-field"><label>Nom du site <span style="color:var(--orange)">*</span></label><input type="text" class="form-input" id="wlName" placeholder="MonEntreprise" oninput="updateWlPreview()"></div>
+        <div class="form-field"><label>Sous-domaine souhaité <span style="color:var(--orange)">*</span></label>
+          <div style="display:flex;align-items:center;gap:.4rem">
+            <input type="text" class="form-input" id="wlSubdomain" placeholder="monentreprise" oninput="sanitizeSubdomain()">
+            <span style="color:var(--t400);font-size:.85rem;white-space:nowrap">.archiva.app</span>
+          </div>
+        </div>
+      </div>
+      <div class="form-grid-2">
+        <div class="form-field"><label>Slogan</label><input type="text" class="form-input" id="wlTagline" placeholder="L'IA documentaire de votre entreprise" oninput="updateWlPreview()"></div>
+        <div class="form-field"><label>Email de contact</label><input type="email" class="form-input" id="wlEmail" placeholder="contact@monentreprise.fr"></div>
+      </div>
+    </div>
+
+    <!-- Step 2: Colours -->
+    <div class="wl-section">
+      <h3 class="wl-step">② Couleurs</h3>
+      <div style="display:flex;flex-wrap:wrap;gap:1.25rem;align-items:flex-end">
+        <div class="form-field" style="flex:1;min-width:120px">
+          <label>Couleur principale</label>
+          <div style="display:flex;align-items:center;gap:.6rem;margin-top:.4rem">
+            <input type="color" id="wlColorPrimary" value="#f97316" oninput="updateWlPreview()" style="width:44px;height:36px;border:none;background:none;cursor:pointer;padding:0;border-radius:.4rem">
+            <input type="text" class="form-input" id="wlColorPrimaryHex" value="#f97316" style="font-family:monospace;flex:1" oninput="syncColorFromHex('Primary')">
+          </div>
+        </div>
+        <div class="form-field" style="flex:1;min-width:120px">
+          <label>Couleur secondaire</label>
+          <div style="display:flex;align-items:center;gap:.6rem;margin-top:.4rem">
+            <input type="color" id="wlColorSecondary" value="#6366f1" oninput="updateWlPreview()" style="width:44px;height:36px;border:none;background:none;cursor:pointer;padding:0;border-radius:.4rem">
+            <input type="text" class="form-input" id="wlColorSecondaryHex" value="#6366f1" style="font-family:monospace;flex:1" oninput="syncColorFromHex('Secondary')">
+          </div>
+        </div>
+        <div class="form-field" style="flex:1;min-width:120px">
+          <label>Fond principal</label>
+          <div style="display:flex;align-items:center;gap:.6rem;margin-top:.4rem">
+            <input type="color" id="wlColorBg" value="#050c1a" oninput="updateWlPreview()" style="width:44px;height:36px;border:none;background:none;cursor:pointer;padding:0;border-radius:.4rem">
+            <input type="text" class="form-input" id="wlColorBgHex" value="#050c1a" style="font-family:monospace;flex:1" oninput="syncColorFromHex('Bg')">
+          </div>
+        </div>
+      </div>
+
+      <!-- Presets -->
+      <div style="margin-top:1rem">
+        <p style="font-size:.8rem;color:var(--t400);margin-bottom:.6rem">Thèmes prédéfinis :</p>
+        <div style="display:flex;flex-wrap:wrap;gap:.5rem">
+          <button class="btn btn-sm btn-ghost" onclick="applyWlTheme('#f97316','#6366f1','#050c1a')">🟠 Archiva (défaut)</button>
+          <button class="btn btn-sm btn-ghost" onclick="applyWlTheme('#10b981','#0ea5e9','#030f0a')">🟢 Émeraude</button>
+          <button class="btn btn-sm btn-ghost" onclick="applyWlTheme('#8b5cf6','#ec4899','#0d0514')">🟣 Violet</button>
+          <button class="btn btn-sm btn-ghost" onclick="applyWlTheme('#ef4444','#f59e0b','#140505')">🔴 Rubis</button>
+          <button class="btn btn-sm btn-ghost" onclick="applyWlTheme('#0ea5e9','#6366f1','#030c14')">🔵 Océan</button>
+          <button class="btn btn-sm btn-ghost" onclick="applyWlTheme('#1a1a1a','#333333','#ffffff')">⬜ Blanc pro</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 3: Typography -->
+    <div class="wl-section">
+      <h3 class="wl-step">③ Typographie</h3>
+      <div class="form-grid-2">
+        <div class="form-field">
+          <label>Police principale</label>
+          <select class="form-select" id="wlFont" onchange="updateWlPreview()">
+            <option value="Inter">Inter (défaut)</option>
+            <option value="'Poppins'">Poppins</option>
+            <option value="'DM Sans'">DM Sans</option>
+            <option value="'Space Grotesk'">Space Grotesk</option>
+            <option value="Georgia">Georgia (serif)</option>
+            <option value="'Courier New'">Courier New (mono)</option>
+          </select>
+        </div>
+        <div class="form-field">
+          <label>Style du logo</label>
+          <select class="form-select" id="wlLogoStyle" onchange="updateWlPreview()">
+            <option value="text">Texte seul</option>
+            <option value="icon-text">Icône + Texte</option>
+            <option value="badge">Badge arrondi</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 4: Content -->
+    <div class="wl-section">
+      <h3 class="wl-step">④ Contenu</h3>
+      <div class="form-field" style="margin-bottom:1rem">
+        <label>Description hero (sous le titre)</label>
+        <textarea class="form-textarea" id="wlHeroDesc" rows="2" placeholder="Décrivez votre offre en 1-2 phrases…" oninput="updateWlPreview()"></textarea>
+      </div>
+      <div class="form-grid-2">
+        <div class="form-field"><label>Texte bouton principal</label><input type="text" class="form-input" id="wlCtaText" placeholder="Démarrer gratuitement" oninput="updateWlPreview()"></div>
+        <div class="form-field"><label>Langue par défaut</label>
+          <select class="form-select" id="wlLang">
+            <option value="fr">Français</option>
+            <option value="en">English</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- Preview -->
+    <div class="wl-section">
+      <h3 class="wl-step">⑤ Aperçu</h3>
+      <div id="wlPreview" style="border:1px solid var(--border);border-radius:1rem;overflow:hidden;aspect-ratio:16/9;position:relative;background:#050c1a">
+        <div id="wlPreviewInner" style="transform:scale(.5);transform-origin:top left;width:200%;height:200%;padding:2rem;font-family:Inter,sans-serif">
+          <div id="wlPreviewNav" style="display:flex;align-items:center;gap:.75rem;margin-bottom:2rem">
+            <div id="wlPreviewLogo" style="font-size:1.2rem;font-weight:800;color:#f97316">Archiva</div>
+          </div>
+          <div style="text-align:center;padding:3rem 2rem">
+            <div id="wlPreviewTitle" style="font-size:3rem;font-weight:800;color:#fff;margin-bottom:1rem">L'intelligence<br><span id="wlPreviewGradient" style="background:linear-gradient(135deg,#f97316,#6366f1);-webkit-background-clip:text;-webkit-text-fill-color:transparent">documentaire</span></div>
+            <div id="wlPreviewSub" style="font-size:1rem;color:#94a3b8;max-width:500px;margin:0 auto 2rem">Gérez vos documents professionnels en quelques secondes.</div>
+            <button id="wlPreviewCta" style="background:#f97316;border:none;color:#fff;padding:.75rem 1.75rem;border-radius:.5rem;font-size:.9rem;font-weight:600;cursor:default">Démarrer gratuitement</button>
+          </div>
+        </div>
+      </div>
+      <p style="font-size:.75rem;color:var(--t500);margin-top:.5rem;text-align:center">Aperçu non interactif — le site réel sera identique</p>
+    </div>
+
+    <!-- Generate -->
+    <div style="display:flex;gap:1rem;align-items:center;flex-wrap:wrap;margin-top:1rem">
+      <button class="btn btn-primary btn-lg" onclick="generateWhitelabel()">
+        <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+        Générer mon site
+      </button>
+      <div id="wlStatus" style="font-size:.85rem;color:var(--t400)"></div>
+    </div>
+    <div id="wlResult" style="display:none;margin-top:1.5rem;padding:1.25rem;background:rgba(16,185,129,.06);border:1px solid rgba(16,185,129,.2);border-radius:.75rem">
+      <p style="font-weight:600;color:#10b981;margin:0 0 .5rem">✓ Site généré avec succès !</p>
+      <p style="font-size:.875rem;color:var(--t300);margin:0">Votre site sera accessible sur : <a id="wlResultUrl" href="#" target="_blank" style="color:var(--orange)"></a></p>
+      <p style="font-size:.8rem;color:var(--t500);margin:.5rem 0 0">Configuration appliquée. Contactez-nous pour la configuration DNS de votre domaine personnalisé.</p>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     SCROLL 3D / CINEMATIC EFFECTS
+══════════════════════════════════════ -->
+<div id="tunnelOverlay"></div>
+<script>
+(function() {
+  // Cache DOM refs
+  const heroTitle = document.querySelector('.hero-title');
+  const heroBg    = document.querySelector('.hero-blobs');
+  const heroCard  = document.querySelector('.hero-card-wrap');
+  const metricEls = document.querySelectorAll('.hc-metric');
+  const tunnel    = document.getElementById('tunnelOverlay');
+
+  // ── rAF scroll handler ──
+  let ticking = false;
+  function onScroll() {
+    if (!ticking) { requestAnimationFrame(update); ticking = true; }
+  }
+
+  function update() {
+    const sy       = window.scrollY;
+    const ih       = window.innerHeight;
+    const progress = Math.min(sy / ih, 1);
+
+    // Effect 1 — Hero zoom-through
+    if (heroTitle) {
+      heroTitle.style.transform = `scale(${1 + progress * 7})`;
+      heroTitle.style.opacity   = `${Math.max(0, 1 - progress * 1.5)}`;
+    }
+    if (heroBg) {
+      heroBg.style.transform = `translateZ(0) scale(${1 + progress * 0.15})`;
+    }
+
+    // Effect 3 — Parallax on hero card
+    if (heroCard) {
+      heroCard.style.transform = `translateY(${-sy * 0.3}px)`;
+    }
+
+    // Effect 5 — Horizontal parallax on stats
+    metricEls.forEach((el, i) => {
+      const dir = i % 2 === 0 ? 1 : -1;
+      el.style.transform = `translateX(${dir * sy * 0.04 * (i + 1)}px)`;
+    });
+
+    // Effect 6 — Tunnel overlay
+    if (tunnel) {
+      const heroH     = ih;
+      const tunnelStart = heroH * 0.6;
+      const tunnelEnd   = heroH * 0.9;
+      if (sy < tunnelStart) {
+        tunnel.style.setProperty('--r', '100%');
+      } else if (sy > tunnelEnd) {
+        tunnel.style.setProperty('--r', '100%');
+      } else {
+        const t = (sy - tunnelStart) / (tunnelEnd - tunnelStart);
+        // shrink from 100% to 0% at midpoint (0.5), then expand back
+        const r = t < 0.5
+          ? 100 - t * 2 * 100
+          : (t - 0.5) * 2 * 100;
+        tunnel.style.setProperty('--r', r + '%');
+      }
+    }
+
+    ticking = false;
+  }
+
+  window.addEventListener('scroll', onScroll, { passive: true });
+
+  // ── Effect 2 — Section reveal with 3D tilt ──
+  const revealObs = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        e.target.classList.add('visible');
+        revealObs.unobserve(e.target);
+      }
+    });
+  }, { threshold: 0.15 });
+
+  document.querySelectorAll('.feat-card,.case-card,.pricing-card,.integ-card,.partner-card,.faq-item,.sec-label').forEach(el => {
+    el.classList.add('scroll-reveal');
+    revealObs.observe(el);
+  });
+
+  // ── Effect 4 — Glitch flash on section headings ──
+  const glitchObs = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        const h2 = e.target.querySelector('h2');
+        if (h2) {
+          h2.classList.remove('glitch-flash');
+          void h2.offsetWidth; // force reflow
+          h2.classList.add('glitch-flash');
+          setTimeout(() => h2.classList.remove('glitch-flash'), 500);
+        }
+        glitchObs.unobserve(e.target);
+      }
+    });
+  }, { threshold: 0.3 });
+
+  document.querySelectorAll('#features, #pricing, #cases, .section').forEach(el => {
+    glitchObs.observe(el);
+  });
+
+})();
+</script>
 </body>
 </html>
