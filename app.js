@@ -627,7 +627,9 @@ Génère un document complet, structuré en Markdown (## H2, ### H3). Profession
     const result = await callAI(prompt, 3000);
     advanceStep(3);
 
-    const activeSig = getActiveSignature();
+    const sigKeywords = ['signature', 'signe', 'signé', 'avec ma signature', 'ajoute ma signature'];
+    const wantsSignature = sigKeywords.some(k => instr.toLowerCase().includes(k));
+    const activeSig = wantsSignature ? getActiveSignature() : null;
     const sigBlock  = activeSig ? renderSignatureBlock(activeSig) : '';
     document.getElementById('genOutput').innerHTML = `
       <div class="output-bar"><span class="output-lbl">📝 ${escHtml(type)}</span><div class="output-acts"><button class="btn btn-sm btn-ghost" onclick="copyOutput('genContent')">📋 Copier</button><button class="btn btn-sm btn-primary" onclick="exportPdf('genContent')">⬇️ PDF</button></div></div>
