@@ -74,6 +74,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   renderLibrary();
+  renderSignatures();
   renderTemplates();
   renderTriggers();
   setTimeout(checkTriggers, 3000);
@@ -616,9 +617,11 @@ async function generateDoc() {
   showLoading('genOutput', ['Analyse de la demande', 'Structuration', 'Rédaction IA', 'Mise en forme']);
 
   const templateCtx = buildTemplateContext(instr);
+  const activeSig   = getActiveSignature();
+  const sigCtx      = activeSig ? `\n\nAjoute à la toute fin du document une section signature avec ces informations (ne modifie pas leur contenu) :\n${buildSignatureText(activeSig)}` : '';
   const prompt = `Tu es un expert en rédaction professionnelle. Génère un(e) ${type} en ${lang}.
 Contexte : ${company || 'Non précisé'} | Longueur : ${length}
-Instructions : ${instr || 'Document standard professionnel'}${templateCtx}
+Instructions : ${instr || 'Document standard professionnel'}${templateCtx}${sigCtx}
 Génère un document complet, structuré en Markdown (## H2, ### H3). Professionnel et complet.${templateCtx ? '\nRespecte strictement la structure et le style du/des modèle(s) de référence fourni(s).' : ''}`;
 
   try {
@@ -1366,6 +1369,122 @@ Réponds en français. Si l'utilisateur demande une génération de document, g�
   } finally {
     if (btn) { btn.disabled = false; btn.innerHTML = '<svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>'; }
   }
+}
+
+// ── SIGNATURES ────────────────────────────────────────────
+function loadSignatures() {
+  try { return JSON.parse(localStorage.getItem('archiva_signatures') || '[]'); } catch { return []; }
+}
+function saveSignaturesStore(arr) { localStorage.setItem('archiva_signatures', JSON.stringify(arr)); }
+
+function buildSignatureText(sig) {
+  const lines = [];
+  if (sig.name)    lines.push(sig.name + (sig.title ? ` — ${sig.title}` : ''));
+  if (sig.company) lines.push(sig.company);
+  if (sig.email)   lines.push(sig.email);
+  if (sig.phone)   lines.push(sig.phone);
+  if (sig.website) lines.push(sig.website);
+  return lines.join('\n');
+}
+
+function getActiveSignature() {
+  return loadSignatures().find(s => s.active) || null;
+}
+
+function renderSignatures() {
+  const sigs  = loadSignatures();
+  const count = document.getElementById('signaturesCount');
+  if (count) count.textContent = sigs.length;
+  const list = document.getElementById('signaturesList');
+  if (!list) return;
+  if (!sigs.length) {
+    list.innerHTML = '<p style="font-size:.8rem;color:var(--t500);margin:.25rem 0 .5rem">Aucune signature. Cliquez sur ➕ pour en créer une.</p>';
+    return;
+  }
+  list.innerHTML = sigs.map(s => `
+    <div style="background:var(--bg2);border:1px solid ${s.active ? 'var(--orange)' : 'var(--border)'};border-radius:.5rem;padding:.65rem .9rem;display:flex;align-items:center;gap:.75rem">
+      <div style="flex:1;min-width:0">
+        <div style="font-size:.85rem;font-weight:600;color:var(--t100)">${escHtml(s.name)}${s.title ? ` <span style="font-weight:400;color:var(--t400)">— ${escHtml(s.title)}</span>` : ''}</div>
+        <div style="font-size:.74rem;color:var(--t500);margin-top:.15rem">${[s.company, s.email].filter(Boolean).map(escHtml).join(' · ')}</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:.5rem;flex-shrink:0">
+        ${s.active
+          ? `<span style="font-size:.72rem;background:rgba(249,115,22,.12);color:var(--orange);padding:.2rem .5rem;border-radius:9999px;font-weight:600">Active</span>`
+          : `<button onclick="activateSignature(${s.id})" style="font-size:.72rem;background:var(--glass);border:1px solid var(--border);color:var(--t300);padding:.2rem .5rem;border-radius:9999px;cursor:pointer">Activer</button>`}
+        <button onclick="deleteSignature(${s.id})" style="background:none;border:none;color:var(--t400);cursor:pointer;font-size:.9rem" title="Supprimer">🗑</button>
+      </div>
+    </div>`).join('');
+}
+
+function toggleSignatures() {
+  document.getElementById('signaturesBody').classList.toggle('open');
+  document.getElementById('signaturesToggle').classList.toggle('open');
+}
+
+function openSignatureModal() {
+  ['sigName','sigTitle','sigCompany','sigEmail','sigPhone','sigWebsite'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+  document.getElementById('signatureModalError').style.display = 'none';
+  document.getElementById('signaturePreview').innerHTML = '<em style="color:var(--t500)">L\'aperçu apparaît ici…</em>';
+  ['sigName','sigTitle','sigCompany','sigEmail','sigPhone','sigWebsite'].forEach(id => {
+    document.getElementById(id)?.addEventListener('input', updateSignaturePreview);
+  });
+  document.getElementById('signatureModal').style.display = 'flex';
+  setTimeout(() => document.getElementById('sigName').focus(), 80);
+}
+
+function updateSignaturePreview() {
+  const sig = {
+    name: document.getElementById('sigName').value.trim(),
+    title: document.getElementById('sigTitle').value.trim(),
+    company: document.getElementById('sigCompany').value.trim(),
+    email: document.getElementById('sigEmail').value.trim(),
+    phone: document.getElementById('sigPhone').value.trim(),
+    website: document.getElementById('sigWebsite').value.trim(),
+  };
+  const text = buildSignatureText(sig);
+  document.getElementById('signaturePreview').innerHTML = text
+    ? text.split('\n').map(l => `<div>${escHtml(l)}</div>`).join('')
+    : '<em style="color:var(--t500)">L\'aperçu apparaît ici…</em>';
+}
+
+function closeSignatureModal() {
+  document.getElementById('signatureModal').style.display = 'none';
+}
+
+function saveSignature() {
+  const name = document.getElementById('sigName').value.trim();
+  const errEl = document.getElementById('signatureModalError');
+  errEl.style.display = 'none';
+  if (!name) { errEl.textContent = 'Le nom est requis.'; errEl.style.display = 'block'; return; }
+
+  const sigs = loadSignatures().map(s => ({ ...s, active: false }));
+  sigs.unshift({
+    id:      Date.now(),
+    name,
+    title:   document.getElementById('sigTitle').value.trim(),
+    company: document.getElementById('sigCompany').value.trim(),
+    email:   document.getElementById('sigEmail').value.trim(),
+    phone:   document.getElementById('sigPhone').value.trim(),
+    website: document.getElementById('sigWebsite').value.trim(),
+    active:  true,
+  });
+  saveSignaturesStore(sigs);
+  renderSignatures();
+  closeSignatureModal();
+  showNotif(`✍️ Signature "${name}" créée et activée.`);
+}
+
+function activateSignature(id) {
+  saveSignaturesStore(loadSignatures().map(s => ({ ...s, active: s.id === id })));
+  renderSignatures();
+}
+
+function deleteSignature(id) {
+  saveSignaturesStore(loadSignatures().filter(s => s.id !== id));
+  renderSignatures();
 }
 
 // ── MODÈLES DE DOCUMENTS ───────────────────────────────────

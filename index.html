@@ -294,6 +294,24 @@
       </div>
     </div>
 
+    <!-- SIGNATURES -->
+    <div class="doc-lib-wrap" id="signaturesWrap" style="margin-top:.75rem">
+      <div class="doc-lib-header" onclick="toggleSignatures()">
+        <div class="doc-lib-title">
+          ✍️ Signatures
+          <span class="doc-lib-count" id="signaturesCount">0</span>
+          <span style="font-size:.72rem;font-weight:400;color:var(--t500);margin-left:.5rem">— ajoutées automatiquement à vos documents</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:.5rem">
+          <button onclick="event.stopPropagation();openSignatureModal()" style="background:rgba(249,115,22,.15);border:1px solid rgba(249,115,22,.3);color:var(--orange);border-radius:.4rem;padding:.2rem .55rem;font-size:.8rem;cursor:pointer;line-height:1" title="Ajouter une signature">➕</button>
+          <span class="doc-lib-toggle" id="signaturesToggle">▶</span>
+        </div>
+      </div>
+      <div class="doc-lib-body" id="signaturesBody">
+        <div id="signaturesList" style="display:flex;flex-direction:column;gap:.5rem"></div>
+      </div>
+    </div>
+
     <!-- MODÈLES DE DOCUMENTS -->
     <div class="doc-lib-wrap" id="templatesWrap" style="margin-top:.75rem">
       <div class="doc-lib-header" onclick="toggleTemplates()">
@@ -659,6 +677,61 @@
     <div style="display:flex;gap:.75rem;justify-content:flex-end">
       <button class="btn btn-ghost" onclick="closeTriggerModal()">Annuler</button>
       <button class="btn btn-primary" onclick="saveTrigger()">⚡ Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL SIGNATURE -->
+<div id="signatureModal" class="modal-overlay" style="display:none" onclick="if(event.target===this)closeSignatureModal()">
+  <div class="modal-box" style="max-width:500px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem">
+      <div>
+        <h3 style="margin:0 0 .2rem">✍️ Nouvelle signature</h3>
+        <p style="font-size:.8rem;color:var(--t400);margin:0">Ajoutée automatiquement en bas de vos documents générés</p>
+      </div>
+      <button onclick="closeSignatureModal()" style="background:none;border:none;color:var(--t400);font-size:1.2rem;cursor:pointer;padding:.25rem">✕</button>
+    </div>
+
+    <div class="form-grid-2" style="margin-bottom:1rem">
+      <div class="form-field">
+        <label style="display:block;font-size:.82rem;font-weight:600;color:var(--t200);margin-bottom:.5rem">Nom complet <span style="color:var(--orange)">*</span></label>
+        <input type="text" class="form-input" id="sigName" placeholder="Jean Dupont">
+      </div>
+      <div class="form-field">
+        <label style="display:block;font-size:.82rem;font-weight:600;color:var(--t200);margin-bottom:.5rem">Poste</label>
+        <input type="text" class="form-input" id="sigTitle" placeholder="Directeur Commercial">
+      </div>
+    </div>
+    <div class="form-grid-2" style="margin-bottom:1rem">
+      <div class="form-field">
+        <label style="display:block;font-size:.82rem;font-weight:600;color:var(--t200);margin-bottom:.5rem">Entreprise</label>
+        <input type="text" class="form-input" id="sigCompany" placeholder="TechCorp SAS">
+      </div>
+      <div class="form-field">
+        <label style="display:block;font-size:.82rem;font-weight:600;color:var(--t200);margin-bottom:.5rem">Email</label>
+        <input type="email" class="form-input" id="sigEmail" placeholder="jean@techcorp.fr">
+      </div>
+    </div>
+    <div class="form-grid-2" style="margin-bottom:1.25rem">
+      <div class="form-field">
+        <label style="display:block;font-size:.82rem;font-weight:600;color:var(--t200);margin-bottom:.5rem">Téléphone</label>
+        <input type="text" class="form-input" id="sigPhone" placeholder="+33 6 00 00 00 00">
+      </div>
+      <div class="form-field">
+        <label style="display:block;font-size:.82rem;font-weight:600;color:var(--t200);margin-bottom:.5rem">Site web</label>
+        <input type="text" class="form-input" id="sigWebsite" placeholder="www.techcorp.fr">
+      </div>
+    </div>
+
+    <div id="signaturePreview" style="background:var(--bg2);border:1px solid var(--border);border-radius:.5rem;padding:.85rem 1rem;font-size:.8rem;color:var(--t300);line-height:1.7;margin-bottom:1.25rem;min-height:60px">
+      <em style="color:var(--t500)">L'aperçu apparaît ici…</em>
+    </div>
+
+    <div id="signatureModalError" style="display:none;font-size:.82rem;color:var(--red);margin-bottom:.75rem"></div>
+
+    <div style="display:flex;gap:.75rem;justify-content:flex-end">
+      <button class="btn btn-ghost" onclick="closeSignatureModal()">Annuler</button>
+      <button class="btn btn-primary" onclick="saveSignature()">✍️ Enregistrer</button>
     </div>
   </div>
 </div>
