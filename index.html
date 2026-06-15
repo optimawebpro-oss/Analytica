@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Archiva — Intelligence Documentaire pour Entreprises</title>
-  <meta name="description" content="Archiva transforme vos documents d'entreprise en intelligence actionnable. Génération, extraction, analyse, email et stockage cloud — propulsés par l'IA.">
+  <meta name="description" content="Archiva — Créez des documents professionnels en quelques secondes, sans expertise. 100% RGPD, données traitées dans votre navigateur. Génération IA, extraction, analyse et connecteurs tiers.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
@@ -95,7 +95,7 @@
         <div class="ael-corp-label">A.E.L Corporation</div>
         <div class="hero-badge"><span class="pulse"></span>Propulsé par Claude &amp; Mistral AI</div>
         <h1 class="hero-title">L'intelligence<br><span class="gradient-text">documentaire</span><br>pour votre entreprise</h1>
-        <p class="hero-sub">Générez, analysez et gérez tous vos documents professionnels en quelques secondes. Extraction, rapports visuels, email &amp; cloud — tout connecté.</p>
+        <p class="hero-sub">Créez des documents professionnels en quelques clics, sans expertise. Vos données restent dans votre navigateur — 100% RGPD, zéro export manuel.</p>
         <div class="hero-actions">
           <button class="btn btn-primary btn-lg" onclick="showPage('ai')">
             <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
@@ -105,7 +105,8 @@
         </div>
         <div class="hero-trust">
           <span><span class="check">✓</span> Sans carte bancaire</span>
-          <span><span class="check">✓</span> RGPD conforme</span>
+          <span><span class="check">✓</span> 100% RGPD conforme</span>
+          <span><span class="check">✓</span> Données dans votre navigateur</span>
           <span><span class="check">✓</span> Annulation libre</span>
         </div>
       </div>
@@ -149,6 +150,15 @@
       <div class="hero-stat"><span class="num gradient-text">2s</span><div class="lbl">Temps moyen</div></div>
     </div>
   </section>
+
+    <!-- RGPD BANNER -->
+    <div style="background:rgba(16,185,129,.06);border:1px solid rgba(16,185,129,.18);border-radius:1rem;padding:1rem 1.5rem;display:flex;align-items:center;gap:1rem;margin:0 auto 3rem;max-width:900px;flex-wrap:wrap">
+      <span style="font-size:1.5rem">🔒</span>
+      <div>
+        <strong style="color:#10b981;font-size:.9rem">Conformité RGPD totale</strong>
+        <p style="font-size:.8rem;color:var(--t400);margin:.15rem 0 0">Vos documents sont traités localement dans votre navigateur. Aucune donnée transmise à nos serveurs. Clés API stockées en session uniquement.</p>
+      </div>
+    </div>
 
   <section class="section">
     <div class="container">
@@ -285,6 +295,66 @@
       </div>
     </div>
 
+    <!-- SIGNATURES -->
+    <div class="doc-lib-wrap" id="signaturesWrap" style="margin-top:.75rem">
+      <div class="doc-lib-header" onclick="toggleSignatures()">
+        <div class="doc-lib-title">
+          ✍️ Signatures
+          <span class="doc-lib-count" id="signaturesCount">0</span>
+          <span style="font-size:.72rem;font-weight:400;color:var(--t500);margin-left:.5rem">— ajoutées automatiquement à vos documents</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:.5rem">
+          <button onclick="event.stopPropagation();openSignatureModal()" style="background:rgba(249,115,22,.15);border:1px solid rgba(249,115,22,.3);color:var(--orange);border-radius:.4rem;padding:.2rem .55rem;font-size:.8rem;cursor:pointer;line-height:1" title="Ajouter une signature">➕</button>
+          <span class="doc-lib-toggle" id="signaturesToggle">▶</span>
+        </div>
+      </div>
+      <div class="doc-lib-body" id="signaturesBody">
+        <div id="signaturesList" style="display:flex;flex-direction:column;gap:.5rem"></div>
+      </div>
+    </div>
+
+    <!-- MODÈLES DE DOCUMENTS -->
+    <div class="doc-lib-wrap" id="templatesWrap" style="margin-top:.75rem">
+      <div class="doc-lib-header" onclick="toggleTemplates()">
+        <div class="doc-lib-title">
+          📋 Modèles de documents
+          <span class="doc-lib-count" id="templatesCount">0</span>
+          <span style="font-size:.72rem;font-weight:400;color:var(--t500);margin-left:.5rem">— referencez-les dans vos instructions</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:.5rem">
+          <button onclick="event.stopPropagation();openTemplateModal()" style="background:rgba(249,115,22,.15);border:1px solid rgba(249,115,22,.3);color:var(--orange);border-radius:.4rem;padding:.2rem .55rem;font-size:.8rem;cursor:pointer;line-height:1" title="Ajouter un modèle">➕</button>
+          <span class="doc-lib-toggle" id="templatesToggle">▶</span>
+        </div>
+      </div>
+      <div class="doc-lib-body" id="templatesBody">
+        <p style="font-size:.8rem;color:var(--t400);margin:0 0 1rem;line-height:1.55">
+          Sauvegardez des documents types. Mentionnez leur nom dans vos instructions pour que l'IA les utilise comme modèle de format.
+          <br><em style="color:var(--orange)">Exemple : "rédige un contrat sous la forme du modèle Contrat Standard"</em>
+        </p>
+        <div id="templatesList" style="display:flex;flex-direction:column;gap:.5rem;margin-bottom:.75rem"></div>
+        <button class="btn btn-sm btn-ghost" onclick="openTemplateModal()" style="gap:.4rem">
+          ➕ Ajouter un modèle
+        </button>
+      </div>
+    </div>
+
+    <!-- DÉCLENCHEURS & WORKFLOWS -->
+    <div class="doc-lib-wrap" id="triggersWrap" style="margin-top:.75rem">
+      <div class="doc-lib-header" style="cursor:default">
+        <div class="doc-lib-title">
+          ⚡ Déclencheurs & Workflows
+          <span class="doc-lib-count" id="triggersCount">0</span>
+          <span style="font-size:.72rem;font-weight:400;color:var(--t500);margin-left:.5rem">— automatisez vos tâches récurrentes</span>
+        </div>
+      </div>
+      <div class="doc-lib-body" id="triggersBody">
+        <div id="triggersList" style="display:flex;flex-direction:column;gap:.5rem;margin-bottom:.5rem"></div>
+        <p style="font-size:.79rem;color:var(--t500);margin:0">
+          💬 Créez vos déclencheurs depuis l'<button onclick="switchPanel('chat')" style="background:none;border:none;color:var(--orange);cursor:pointer;font-size:.79rem;padding:0;text-decoration:underline">Assistant IA</button> — décrivez votre workflow en langage naturel.
+        </p>
+      </div>
+    </div>
+
     <!-- CARTE CLÉ API -->
     <div class="api-card" id="apiCard">
       <div class="api-top-row">
@@ -312,8 +382,7 @@
       <button class="fnav active" id="fnav-gen"      onclick="switchPanel('gen')">📝 Génération</button>
       <button class="fnav"        id="fnav-extract"  onclick="switchPanel('extract')">🔍 Extraction</button>
       <button class="fnav"        id="fnav-analysis" onclick="switchPanel('analysis')">📊 Analyse</button>
-      <button class="fnav"        id="fnav-email"    onclick="switchPanel('email')">📧 Email</button>
-      <button class="fnav"        id="fnav-storage"  onclick="switchPanel('storage')">☁️ Stockage</button>
+      <button class="fnav"        id="fnav-chat"     onclick="switchPanel('chat')">💬 Assistant IA</button>
     </div>
 
     <!-- PANEL 1 : GÉNÉRATION -->
@@ -401,50 +470,30 @@
       </div>
     </div>
 
-    <!-- PANEL 4 : EMAIL -->
-    <div class="f-panel" id="panel-email">
+    <!-- PANEL 4 : ASSISTANT IA -->
+    <div class="f-panel" id="panel-chat">
       <div class="panel-box">
-        <h2 class="panel-title">Connexion Email</h2>
-        <p class="panel-sub">Connectez Gmail ou Outlook. Les résumés rejoignent votre bibliothèque IA.</p>
-        <div class="form-field"><label>Fournisseur</label>
-          <div class="prov-grid">
-            <div class="prov-card active" id="eprov-gmail" onclick="selectEmailProvider('gmail')"><div class="prov-ico">📧</div><div class="prov-name">Gmail</div><div class="prov-desc">Google API v1</div></div>
-            <div class="prov-card" id="eprov-outlook" onclick="selectEmailProvider('outlook')"><div class="prov-ico">📮</div><div class="prov-name">Outlook</div><div class="prov-desc">Microsoft Graph</div></div>
-          </div>
-        </div>
-        <div id="emailConfigGmail">
-          <div class="form-grid-2"><div class="form-field"><label>Client ID Google</label><input type="text" class="form-input" id="gmailClientId" placeholder="123456789-xxx.apps.googleusercontent.com"></div><div class="form-field"><label>Client Secret</label><input type="password" class="form-input" id="gmailSecret" placeholder="GOCSPX-…"></div></div>
-          <div class="form-field"><label>Access Token</label><input type="password" class="form-input" id="gmailToken" placeholder="ya29.A0…"></div>
-        </div>
-        <div id="emailConfigOutlook" style="display:none">
-          <div class="form-grid-2"><div class="form-field"><label>Application (Client) ID</label><input type="text" class="form-input" id="outlookClientId" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"></div><div class="form-field"><label>Access Token</label><input type="password" class="form-input" id="outlookToken" placeholder="EwAoA8l6B…"></div></div>
-        </div>
-        <div class="form-field"><label>Nombre d'emails</label><select class="form-select" id="emailCount"><option value="5">5 emails</option><option value="10" selected>10 emails</option><option value="20">20 emails</option><option value="50">50 emails</option></select></div>
-        <div class="step-nav"><button class="btn btn-primary btn-lg" onclick="connectEmail()"><svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>Connecter &amp; Charger</button></div>
-        <div id="emailsWrap" style="display:none;margin-top:1.75rem"><h3 style="font-size:1rem;margin-bottom:1rem;color:var(--t200)">📬 Emails récents</h3><div class="emails-wrap" id="emailsList"></div></div>
-      </div>
-    </div>
+        <h2 class="panel-title">Assistant IA</h2>
+        <p class="panel-sub">Donnez des instructions en langage naturel. L'assistant peut générer des documents, analyser des fichiers, exporter vers vos outils connectés et répondre à toutes vos questions.</p>
 
-    <!-- PANEL 5 : STOCKAGE -->
-    <div class="f-panel" id="panel-storage">
-      <div class="panel-box">
-        <h2 class="panel-title">Stockage Cloud</h2>
-        <p class="panel-sub">Connectez votre cloud. Les analyses rejoignent la bibliothèque partagée.</p>
-        <div class="form-field"><label>Service</label>
-          <div class="prov-grid">
-            <div class="prov-card active" id="sprov-gdrive" onclick="selectStorageProvider('gdrive')"><div class="prov-ico">📁</div><div class="prov-name">Google Drive</div><div class="prov-desc">Drive API v3</div></div>
-            <div class="prov-card" id="sprov-dropbox" onclick="selectStorageProvider('dropbox')"><div class="prov-ico">💧</div><div class="prov-name">Dropbox</div><div class="prov-desc">Dropbox API v2</div></div>
-            <div class="prov-card" id="sprov-onedrive" onclick="selectStorageProvider('onedrive')"><div class="prov-ico">☁️</div><div class="prov-name">OneDrive</div><div class="prov-desc">Microsoft Graph</div></div>
-          </div>
+        <div id="chatHistory" style="display:flex;flex-direction:column;gap:.85rem;margin-bottom:1.25rem;max-height:480px;overflow-y:auto;padding:.25rem 0"></div>
+
+        <div style="display:flex;gap:.65rem;align-items:flex-end">
+          <textarea class="form-textarea" id="chatInput" rows="2"
+            placeholder="Ex : génère un contrat commercial pour TechCorp, puis exporte-le vers Notion…"
+            style="flex:1;resize:none;min-height:52px"
+            onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendChatMessage()}"></textarea>
+          <button class="btn btn-primary" onclick="sendChatMessage()" id="chatSendBtn" style="height:52px;padding:0 1.1rem;flex-shrink:0">
+            <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+          </button>
         </div>
-        <div id="storageConfigGdrive"><div class="form-field"><label>Access Token Google Drive</label><input type="password" class="form-input" id="gdriveToken" placeholder="ya29.A0…"></div><div class="form-field"><label>ID du dossier (optionnel)</label><input type="text" class="form-input" id="gdriveFolderId" placeholder="1BxiMVs0XRA5…"></div></div>
-        <div id="storageConfigDropbox" style="display:none"><div class="form-field"><label>Access Token Dropbox</label><input type="password" class="form-input" id="dropboxToken" placeholder="sl.A0…"></div><div class="form-field"><label>Chemin (optionnel)</label><input type="text" class="form-input" id="dropboxPath" placeholder="/Documents/Entreprise"></div></div>
-        <div id="storageConfigOnedrive" style="display:none"><div class="form-field"><label>Access Token OneDrive</label><input type="password" class="form-input" id="onedriveToken" placeholder="EwAoA8l6B…"></div></div>
-        <div class="step-nav"><button class="btn btn-primary btn-lg" onclick="connectStorage()">Connecter &amp; Parcourir</button></div>
-        <div id="storageWrap" style="display:none;margin-top:1.75rem"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem"><h3 style="font-size:1rem;color:var(--t200)">📂 Fichiers</h3><button class="btn btn-sm btn-ghost" onclick="analyzeSelectedFiles()">📊 Analyser la sélection</button></div><div class="storage-wrap" id="storageList"></div></div>
-        <div class="output-box" id="storageOutput" style="display:none">
-          <div class="output-bar"><span class="output-lbl">📂 Analyse cloud</span><div class="output-acts"><button class="btn btn-sm btn-ghost" onclick="copyOutput('storageContent')">📋 Copier</button><button class="btn btn-sm btn-primary" onclick="exportPdf('storageContent')">⬇️ PDF</button></div></div>
-          <div class="output-body" id="storageContent"></div>
+        <p style="font-size:.74rem;color:var(--t500);margin-top:.6rem">Shift+Entrée pour aller à la ligne · Entrée pour envoyer</p>
+
+        <div style="display:flex;flex-wrap:wrap;gap:.5rem;margin-top:1rem">
+          <button class="btn btn-sm btn-ghost" onclick="chatQuick('Génère un rapport mensuel d\'activité')">📝 Rapport mensuel</button>
+          <button class="btn btn-sm btn-ghost" onclick="chatQuick('Crée une proposition commerciale professionnelle')">💼 Proposition commerciale</button>
+          <button class="btn btn-sm btn-ghost" onclick="chatQuick('Résume mes derniers documents de la bibliothèque')">📚 Résumé bibliothèque</button>
+          <button class="btn btn-sm btn-ghost" onclick="chatQuick('Quels outils sont connectés ?')">🔌 Outils connectés</button>
         </div>
       </div>
     </div>
@@ -526,14 +575,44 @@
           <button class="btn btn-sm btn-ghost integ-btn" onclick="openIntegModal('trello')">Connecter</button>
         </div>
 
-        <div class="integ-card" id="integ-googlekeep">
-          <div class="integ-logo">🟡</div>
+        <div class="integ-card" id="integ-gdrive">
+          <div class="integ-logo">📁</div>
           <div class="integ-info">
-            <div class="integ-name">Google Keep</div>
-            <div class="integ-desc">Notes &amp; listes rapides</div>
+            <div class="integ-name">Google Drive</div>
+            <div class="integ-desc">Sauvegardez vos documents dans Drive</div>
           </div>
-          <div class="integ-status" id="status-googlekeep"><span class="integ-dot soon"></span></div>
-          <button class="btn btn-sm btn-ghost integ-btn" disabled style="opacity:.4;cursor:not-allowed">Bientôt</button>
+          <div class="integ-status" id="status-gdrive"><span class="integ-dot off"></span></div>
+          <button class="btn btn-sm btn-ghost integ-btn" onclick="openIntegModal('gdrive')">Connecter</button>
+        </div>
+
+        <div class="integ-card" id="integ-dropbox">
+          <div class="integ-logo">💧</div>
+          <div class="integ-info">
+            <div class="integ-name">Dropbox</div>
+            <div class="integ-desc">Exportez vers votre Dropbox</div>
+          </div>
+          <div class="integ-status" id="status-dropbox"><span class="integ-dot off"></span></div>
+          <button class="btn btn-sm btn-ghost integ-btn" onclick="openIntegModal('dropbox')">Connecter</button>
+        </div>
+
+        <div class="integ-card" id="integ-gmail">
+          <div class="integ-logo">📧</div>
+          <div class="integ-info">
+            <div class="integ-name">Gmail</div>
+            <div class="integ-desc">Envoyez par email via Gmail</div>
+          </div>
+          <div class="integ-status" id="status-gmail"><span class="integ-dot off"></span></div>
+          <button class="btn btn-sm btn-ghost integ-btn" onclick="openIntegModal('gmail')">Connecter</button>
+        </div>
+
+        <div class="integ-card" id="integ-outlook">
+          <div class="integ-logo">📮</div>
+          <div class="integ-info">
+            <div class="integ-name">Outlook</div>
+            <div class="integ-desc">Envoyez par email via Outlook</div>
+          </div>
+          <div class="integ-status" id="status-outlook"><span class="integ-dot off"></span></div>
+          <button class="btn btn-sm btn-ghost integ-btn" onclick="openIntegModal('outlook')">Connecter</button>
         </div>
 
       </div>
@@ -542,6 +621,177 @@
 
   </div>
 </div><!-- /page-ai -->
+
+<!-- MODAL DÉCLENCHEUR -->
+<div id="triggerModal" class="modal-overlay" style="display:none" onclick="if(event.target===this)closeTriggerModal()">
+  <div class="modal-box" style="max-width:540px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem">
+      <div>
+        <h3 style="margin:0 0 .2rem">⚡ Nouveau déclencheur</h3>
+        <p style="font-size:.8rem;color:var(--t400);margin:0">Définissez quand et quoi exécuter automatiquement</p>
+      </div>
+      <button onclick="closeTriggerModal()" style="background:none;border:none;color:var(--t400);font-size:1.2rem;cursor:pointer;padding:.25rem">✕</button>
+    </div>
+
+    <div class="form-field" style="margin-bottom:1rem">
+      <label style="display:block;font-size:.82rem;font-weight:600;color:var(--t200);margin-bottom:.5rem">Nom du déclencheur <span style="color:var(--orange)">*</span></label>
+      <input type="text" class="form-input" id="triggerNameInput" placeholder="Ex : Rapport du lundi matin, Résumé emails quotidien…">
+    </div>
+
+    <div class="form-grid-2" style="margin-bottom:1rem">
+      <div class="form-field">
+        <label style="display:block;font-size:.82rem;font-weight:600;color:var(--t200);margin-bottom:.5rem">Fréquence</label>
+        <select class="form-select" id="triggerFreq" onchange="updateTriggerSchedule()">
+          <option value="daily">Tous les jours</option>
+          <option value="weekly">Chaque semaine</option>
+          <option value="monthly">Chaque mois</option>
+        </select>
+      </div>
+      <div class="form-field" id="triggerTimeField">
+        <label style="display:block;font-size:.82rem;font-weight:600;color:var(--t200);margin-bottom:.5rem">Heure</label>
+        <input type="time" class="form-input" id="triggerTime" value="08:00">
+      </div>
+    </div>
+
+    <div class="form-field" id="triggerWeekdayField" style="display:none;margin-bottom:1rem">
+      <label style="display:block;font-size:.82rem;font-weight:600;color:var(--t200);margin-bottom:.5rem">Jour de la semaine</label>
+      <select class="form-select" id="triggerWeekday">
+        <option value="1">Lundi</option><option value="2">Mardi</option><option value="3">Mercredi</option>
+        <option value="4">Jeudi</option><option value="5">Vendredi</option><option value="6">Samedi</option><option value="0">Dimanche</option>
+      </select>
+    </div>
+
+    <div class="form-field" id="triggerDayField" style="display:none;margin-bottom:1rem">
+      <label style="display:block;font-size:.82rem;font-weight:600;color:var(--t200);margin-bottom:.5rem">Jour du mois</label>
+      <input type="number" class="form-input" id="triggerDay" min="1" max="28" value="1" placeholder="1">
+    </div>
+
+    <div class="form-field" style="margin-bottom:1.25rem">
+      <label style="display:block;font-size:.82rem;font-weight:600;color:var(--t200);margin-bottom:.5rem">Action à exécuter <span style="color:var(--orange)">*</span></label>
+      <textarea class="form-textarea" id="triggerAction" rows="4"
+        placeholder="Décrivez ce que doit faire l'IA. Ex : Génère un rapport d'activité hebdomadaire pour notre équipe commerciale et exporte-le vers Notion."></textarea>
+      <p style="font-size:.74rem;color:var(--t500);margin:.4rem 0 0">Vous pouvez mentionner vos outils connectés (Notion, Slack, Gmail…) et vos modèles de documents.</p>
+    </div>
+
+    <div id="triggerModalError" style="display:none;font-size:.82rem;color:var(--red);margin-bottom:.75rem"></div>
+
+    <div style="display:flex;gap:.75rem;justify-content:flex-end">
+      <button class="btn btn-ghost" onclick="closeTriggerModal()">Annuler</button>
+      <button class="btn btn-primary" onclick="saveTrigger()">⚡ Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL SIGNATURE -->
+<div id="signatureModal" class="modal-overlay" style="display:none" onclick="if(event.target===this)closeSignatureModal()">
+  <div class="modal-box" style="max-width:520px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem">
+      <div>
+        <h3 style="margin:0 0 .2rem">✍️ Nouvelle signature</h3>
+        <p style="font-size:.8rem;color:var(--t400);margin:0">Importez votre signature manuscrite — placée en bas de vos documents</p>
+      </div>
+      <button onclick="closeSignatureModal()" style="background:none;border:none;color:var(--t400);font-size:1.2rem;cursor:pointer;padding:.25rem">✕</button>
+    </div>
+
+    <!-- Upload image signature -->
+    <div class="form-field" style="margin-bottom:1.25rem">
+      <label style="display:block;font-size:.82rem;font-weight:600;color:var(--t200);margin-bottom:.5rem">Image de signature <span style="color:var(--orange)">*</span></label>
+      <div class="upload-zone" style="padding:1.25rem;cursor:pointer" onclick="document.getElementById('sigImageInput').click()"
+        ondragover="event.preventDefault()" ondrop="handleSigImageDrop(event)">
+        <div id="sigImagePreviewWrap" style="display:none;text-align:center">
+          <img id="sigImagePreview" style="max-height:100px;max-width:100%;filter:invert(1) brightness(2)" alt="Aperçu signature">
+          <p style="font-size:.75rem;color:var(--t500);margin:.5rem 0 0">Cliquez pour changer</p>
+        </div>
+        <div id="sigImagePlaceholder">
+          <div class="uz-icon" style="font-size:1.75rem">✍️</div>
+          <p class="uz-main">Glissez votre signature ou cliquez</p>
+          <p class="uz-formats">PNG · JPG · WEBP — fond blanc ou transparent</p>
+        </div>
+      </div>
+      <input type="file" id="sigImageInput" accept="image/png,image/jpeg,image/webp" style="display:none" onchange="handleSigImageSelect(event)">
+    </div>
+
+    <!-- Infos optionnelles -->
+    <div class="form-grid-2" style="margin-bottom:1rem">
+      <div class="form-field">
+        <label style="display:block;font-size:.82rem;font-weight:600;color:var(--t200);margin-bottom:.5rem">Nom (optionnel)</label>
+        <input type="text" class="form-input" id="sigName" placeholder="Jean Dupont">
+      </div>
+      <div class="form-field">
+        <label style="display:block;font-size:.82rem;font-weight:600;color:var(--t200);margin-bottom:.5rem">Poste (optionnel)</label>
+        <input type="text" class="form-input" id="sigTitle" placeholder="Directeur Commercial">
+      </div>
+    </div>
+    <div class="form-grid-2" style="margin-bottom:1.25rem">
+      <div class="form-field">
+        <label style="display:block;font-size:.82rem;font-weight:600;color:var(--t200);margin-bottom:.5rem">Entreprise (optionnel)</label>
+        <input type="text" class="form-input" id="sigCompany" placeholder="TechCorp SAS">
+      </div>
+      <div class="form-field">
+        <label style="display:block;font-size:.82rem;font-weight:600;color:var(--t200);margin-bottom:.5rem">Email (optionnel)</label>
+        <input type="email" class="form-input" id="sigEmail" placeholder="jean@techcorp.fr">
+      </div>
+    </div>
+
+    <div id="signatureModalError" style="display:none;font-size:.82rem;color:var(--red);margin-bottom:.75rem"></div>
+
+    <div style="display:flex;gap:.75rem;justify-content:flex-end">
+      <button class="btn btn-ghost" onclick="closeSignatureModal()">Annuler</button>
+      <button class="btn btn-primary" onclick="saveSignature()">✍️ Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL MODÈLES DE DOCUMENTS -->
+<div id="templateModal" class="modal-overlay" style="display:none" onclick="if(event.target===this)closeTemplateModal()">
+  <div class="modal-box" style="max-width:520px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem">
+      <div>
+        <h3 style="margin:0 0 .2rem">📋 Nouveau modèle</h3>
+        <p style="font-size:.8rem;color:var(--t400);margin:0">Ce document servira de référence de format pour l'IA</p>
+      </div>
+      <button onclick="closeTemplateModal()" style="background:none;border:none;color:var(--t400);font-size:1.2rem;cursor:pointer;padding:.25rem">✕</button>
+    </div>
+
+    <div class="form-field" style="margin-bottom:1.25rem">
+      <label style="display:block;font-size:.82rem;font-weight:600;color:var(--t200);margin-bottom:.5rem">
+        Nom du modèle <span style="color:var(--orange)">*</span>
+      </label>
+      <input type="text" class="form-input" id="templateNameInput"
+        placeholder="Ex : Contrat Standard, Rapport Mensuel, Devis Client…"
+        onkeydown="if(event.key==='Enter')document.getElementById('ttab-paste').click()">
+      <p style="font-size:.74rem;color:var(--t500);margin:.4rem 0 0">C'est ce nom que vous écrirez dans vos instructions pour y faire référence.</p>
+    </div>
+
+    <div class="data-tabs" style="margin-bottom:1rem">
+      <button class="dtab active" id="ttab-file" onclick="switchTemplateTab('file')">📁 Fichier</button>
+      <button class="dtab" id="ttab-paste" onclick="switchTemplateTab('paste')">📋 Coller du texte</button>
+    </div>
+
+    <div id="ttab-content-file">
+      <div class="upload-zone" style="padding:1.25rem" onclick="document.getElementById('templateFileInput').click()"
+        ondragover="event.preventDefault()" ondrop="handleTemplateFileDrop(event)">
+        <div class="uz-icon" style="font-size:1.75rem">📂</div>
+        <p class="uz-main">Glissez votre fichier ou cliquez</p>
+        <p class="uz-formats">PDF · DOCX · TXT · CSV</p>
+      </div>
+      <input type="file" id="templateFileInput" accept=".pdf,.docx,.txt,.csv" style="display:none" onchange="handleTemplateFile(event)">
+      <div id="templateFilePreview" style="font-size:.82rem;color:var(--t400);margin-top:.5rem;min-height:1.2rem"></div>
+    </div>
+
+    <div id="ttab-content-paste" style="display:none">
+      <textarea class="form-textarea" id="templatePasteText" rows="7"
+        placeholder="Collez ici le contenu du document à utiliser comme modèle de format…"></textarea>
+    </div>
+
+    <div id="templateModalError" style="display:none;font-size:.82rem;color:var(--red);margin-top:.75rem"></div>
+
+    <div style="display:flex;gap:.75rem;justify-content:flex-end;margin-top:1.5rem">
+      <button class="btn btn-ghost" onclick="closeTemplateModal()">Annuler</button>
+      <button class="btn btn-primary" onclick="saveTemplate()" id="saveTemplateBtn">✓ Enregistrer le modèle</button>
+    </div>
+  </div>
+</div>
 
 <!-- MODAL INTÉGRATION -->
 <div id="integModal" class="modal-overlay" style="display:none" onclick="if(event.target===this)closeIntegModal()">

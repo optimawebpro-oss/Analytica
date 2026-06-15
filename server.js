@@ -282,6 +282,101 @@ app.post('/api/integ/gsheets', wrap(async (req, res) => {
   res.json({ success: true });
 }));
 
+// Google Drive — upload file as text
+app.post('/api/integ/gdrive', wrap(async (req, res) => {
+  const { token, folderId, title, content } = req.body;
+  if (!token) return res.status(400).json({ error: 'Token Google Drive manquant' });
+
+  const metadata = { name: (title || 'Document Archiva') + '.txt', mimeType: 'text/plain' };
+  if (folderId) metadata.parents = [folderId];
+
+  const boundary = '-------archiva_boundary';
+  const body = [
+    `--${boundary}`,
+    'Content-Type: application/json; charset=UTF-8',
+    '',
+    JSON.stringify(metadata),
+    `--${boundary}`,
+    'Content-Type: text/plain; charset=UTF-8',
+    '',
+    content || '',
+    `--${boundary}--`,
+  ].join('\r\n');
+
+  const r = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token}`, 'Content-Type': `multipart/related; boundary=${boundary}` },
+    body,
+  });
+  const data = await r.json();
+  if (!r.ok) return res.status(r.status).json({ error: data.error?.message || 'Erreur Google Drive' });
+  res.json({ success: true, url: `https://drive.google.com/file/d/${data.id}/view` });
+}));
+
+// Dropbox — upload file
+app.post('/api/integ/dropbox', wrap(async (req, res) => {
+  const { token, path: dropboxPath, title, content } = req.body;
+  if (!token) return res.status(400).json({ error: 'Token Dropbox manquant' });
+
+  const destPath = ((dropboxPath || '/Archiva') + '/' + (title || 'Document') + '.txt').replace(/\/+/g, '/');
+  const r = await fetch('https://content.dropboxapi.com/2/files/upload', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/octet-stream',
+      'Dropbox-API-Arg': JSON.stringify({ path: destPath, mode: 'add', autorename: true }),
+    },
+    body: content || '',
+  });
+  const data = await r.json();
+  if (!r.ok) return res.status(r.status).json({ error: data.error_summary || 'Erreur Dropbox' });
+  res.json({ success: true });
+}));
+
+// Gmail — send email with document content
+app.post('/api/integ/gmail', wrap(async (req, res) => {
+  const { token, to, title, content } = req.body;
+  if (!token) return res.status(400).json({ error: 'Token Gmail manquant' });
+  if (!to)    return res.status(400).json({ error: 'Destinataire Gmail manquant' });
+
+  const subject = title || 'Document Archiva';
+  const body    = content || '';
+  const raw = Buffer.from(
+    `To: ${to}\r\nSubject: ${subject}\r\nContent-Type: text/plain; charset=UTF-8\r\n\r\n${body}`
+  ).toString('base64url');
+
+  const r = await fetch('https://gmail.googleapis.com/gmail/v1/users/me/messages/send', {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ raw }),
+  });
+  const data = await r.json();
+  if (!r.ok) return res.status(r.status).json({ error: data.error?.message || 'Erreur Gmail' });
+  res.json({ success: true });
+}));
+
+// Outlook — send email via Microsoft Graph
+app.post('/api/integ/outlook', wrap(async (req, res) => {
+  const { token, to, title, content } = req.body;
+  if (!token) return res.status(400).json({ error: 'Token Outlook manquant' });
+  if (!to)    return res.status(400).json({ error: 'Destinataire Outlook manquant' });
+
+  const r = await fetch('https://graph.microsoft.com/v1.0/me/sendMail', {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      message: {
+        subject: title || 'Document Archiva',
+        body:    { contentType: 'Text', content: content || '' },
+        toRecipients: [{ emailAddress: { address: to } }],
+      },
+    }),
+  });
+  if (r.status === 202 || r.status === 200) return res.json({ success: true });
+  const data = await r.json().catch(() => ({}));
+  res.status(r.status).json({ error: data.error?.message || 'Erreur Outlook' });
+}));
+
 // ── WHITE LABEL ────────────────────────────────────────────
 const whitelabelConfigs = new Map(); // subdomain -> config
 

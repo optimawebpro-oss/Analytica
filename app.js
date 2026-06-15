@@ -15,9 +15,6 @@ const state = {
   apiKey: '',
   connected: false,
   docType: 'Contrat commercial',
-  emailProvider: 'gmail',
-  storageProvider: 'gdrive',
-  selectedStorageFiles: new Set(),
   charts: [],
   pricingAnnual: false,
   userPlan: 'gratuit',
@@ -96,6 +93,10 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   renderLibrary();
+  renderSignatures();
+  renderTemplates();
+  renderTriggers();
+  setTimeout(checkTriggers, 3000);
   renderPartners();
   renderIntegrations();
   initKinde();
@@ -401,9 +402,10 @@ function toggleDocLib() {
 }
 
 function renderLibrary() {
-  const lib   = loadLibrary();
-  const grid  = document.getElementById('docGrid');
-  const count = document.getElementById('docLibCount');
+  const allLib = loadLibrary();
+  const lib    = allLib.filter(d => ['gen','extract','analysis'].includes(d.module));
+  const grid   = document.getElementById('docGrid');
+  const count  = document.getElementById('docLibCount');
   if (!grid) return;
   count.textContent = lib.length;
 
@@ -412,7 +414,7 @@ function renderLibrary() {
     return;
   }
 
-  const icons = { gen: '📝', extract: '🔍', analysis: '📊', email: '📧', storage: '☁️' };
+  const icons = { gen: '📝', extract: '🔍', analysis: '📊', email: '📧', storage: '☁️', chat: '💬' };
   grid.innerHTML = lib.map(doc => `
     <div class="doc-card" onclick="loadDocFromLibrary('${doc.id}')">
       <div class="doc-card-top">
@@ -635,19 +637,24 @@ async function generateDoc() {
 
   showLoading('genOutput', ['Analyse de la demande', 'Structuration', 'Rédaction IA', 'Mise en forme']);
 
+  const templateCtx = buildTemplateContext(instr);
   const prompt = `Tu es un expert en rédaction professionnelle. Génère un(e) ${type} en ${lang}.
 Contexte : ${company || 'Non précisé'} | Longueur : ${length}
-Instructions : ${instr || 'Document standard professionnel'}
-Génère un document complet, structuré en Markdown (## H2, ### H3). Professionnel et complet.`;
+Instructions : ${instr || 'Document standard professionnel'}${templateCtx}
+Génère un document complet, structuré en Markdown (## H2, ### H3). Professionnel et complet.${templateCtx ? '\nRespecte strictement la structure et le style du/des modèle(s) de référence fourni(s).' : ''}`;
 
   try {
     advanceStep(1); setTimeout(() => advanceStep(2), 800);
     const result = await callAI(prompt, 3000);
     advanceStep(3);
 
+    const sigKeywords = ['signature', 'signe', 'signé', 'avec ma signature', 'ajoute ma signature'];
+    const wantsSignature = sigKeywords.some(k => instr.toLowerCase().includes(k));
+    const activeSig = wantsSignature ? getActiveSignature() : null;
+    const sigBlock  = activeSig ? renderSignatureBlock(activeSig) : '';
     document.getElementById('genOutput').innerHTML = `
       <div class="output-bar"><span class="output-lbl">📝 ${escHtml(type)}</span><div class="output-acts"><button class="btn btn-sm btn-ghost" onclick="copyOutput('genContent')">📋 Copier</button><button class="btn btn-sm btn-primary" onclick="exportPdf('genContent')">⬇️ PDF</button></div></div>
-      <div class="output-body" id="genContent">${markdownToHtml(result)}</div>`;
+      <div class="output-body" id="genContent">${markdownToHtml(result)}${sigBlock}</div>`;
     document.getElementById('genOutput').style.display = 'block';
 
     addToLibrary({ title: type + (company ? ' — ' + company : ''), content: result, module: 'gen' });
@@ -688,8 +695,10 @@ async function runExtraction() {
     showLoading('extractOutput', ['Analyse', 'Extraction', 'Résumé']);
   }
 
+  const extractInstrText = document.getElementById('extractPasteText')?.value || '';
+  const extractTemplateCtx = buildTemplateContext(extractInstrText);
   const prompt = `Expert en analyse documentaire. Effectue une ${mode} du document suivant.
-Réponds en Markdown structuré (##, listes, données en **gras**).
+Réponds en Markdown structuré (##, listes, données en **gras**).${extractTemplateCtx}
 DOCUMENT : ${text.slice(0, 12000)}`;
 
   try {
@@ -701,8 +710,7 @@ DOCUMENT : ${text.slice(0, 12000)}`;
 
     addToLibrary({ title: mode + ' — ' + title, content: result, module: 'extract' });
     document.getElementById('extractOutput').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-    const extractInstr = document.getElementById('extractPasteText')?.value || '';
-    checkAndRunInteg(extractInstr, result, mode + ' — ' + title);
+    checkAndRunInteg(extractInstrText, result, mode + ' — ' + title);
   } catch (err) { showError('extractOutput', err.message); }
 }
 
@@ -725,11 +733,12 @@ async function runAnalysis() {
   } catch (err) { showError('analysisOutput', 'Erreur de lecture : ' + err.message); return; }
 
   advanceStep(1);
+  const analysisTemplateCtx = buildTemplateContext(context);
   const prompt = `Expert analyste de données. Réalise une ${type}.
-Contexte : ${context || 'Analyse générale'}
+Contexte : ${context || 'Analyse générale'}${analysisTemplateCtx}
 DONNÉES : ${dataText.slice(0, 12000)}
 
-Rapport Markdown avec : ## Synthèse, ## Analyse, ## Données clés (tableau), ## Tendances, ## Recommandations
+Rapport Markdown avec : ## Synthèse, ## Analyse, ## Données clés (tableau), ## Tendances, ## Recommandations${analysisTemplateCtx ? '\nRespecte la structure du/des modèle(s) de référence fourni(s).' : ''}
 
 Puis à la toute fin, données graphiques JSON délimitées exactement ainsi :
 \`\`\`chartdata
@@ -785,162 +794,6 @@ function renderCharts(charts) {
     });
   });
   area.appendChild(grid);
-}
-
-// ── MODULE 4 : EMAIL ───────────────────────────────────────
-function selectEmailProvider(name) {
-  state.emailProvider = name;
-  document.querySelectorAll('[id^="eprov-"]').forEach(el => el.classList.remove('active'));
-  document.getElementById('eprov-' + name).classList.add('active');
-  document.getElementById('emailConfigGmail').style.display   = name === 'gmail'   ? '' : 'none';
-  document.getElementById('emailConfigOutlook').style.display = name === 'outlook' ? '' : 'none';
-}
-
-async function connectEmail() {
-  if (!checkConnection()) return;
-  const count = parseInt(document.getElementById('emailCount').value);
-  try {
-    const emails = state.emailProvider === 'gmail' ? await fetchGmailEmails(count) : await fetchOutlookEmails(count);
-    renderEmails(emails);
-  } catch (err) { showNotif('Erreur : ' + err.message); }
-}
-
-async function fetchGmailEmails(count) {
-  const token = document.getElementById('gmailToken').value.trim();
-  if (!token) throw new Error('Access Token Gmail requis');
-  const listRes = await fetch(`https://gmail.googleapis.com/gmail/v1/users/me/messages?maxResults=${count}&labelIds=INBOX`, { headers: { Authorization: 'Bearer ' + token } });
-  if (!listRes.ok) throw new Error('Token Gmail invalide ou expiré');
-  const { messages = [] } = await listRes.json();
-  const emails = [];
-  for (const msg of messages.slice(0, count)) {
-    const res = await fetch(`https://gmail.googleapis.com/gmail/v1/users/me/messages/${msg.id}?format=metadata&metadataHeaders=From&metadataHeaders=Subject&metadataHeaders=Date`, { headers: { Authorization: 'Bearer ' + token } });
-    if (!res.ok) continue;
-    const data = await res.json();
-    const h = {}; (data.payload?.headers || []).forEach(x => { h[x.name] = x.value; });
-    emails.push({ id: msg.id, from: h.From || 'Inconnu', subject: h.Subject || '(Sans objet)', date: h.Date || '', snippet: data.snippet || '', unread: (data.labelIds || []).includes('UNREAD') });
-  }
-  return emails;
-}
-
-async function fetchOutlookEmails(count) {
-  const token = document.getElementById('outlookToken').value.trim();
-  if (!token) throw new Error('Access Token Outlook requis');
-  const res = await fetch(`https://graph.microsoft.com/v1.0/me/mailFolders/inbox/messages?$top=${count}&$select=from,subject,receivedDateTime,bodyPreview,isRead`, { headers: { Authorization: 'Bearer ' + token } });
-  if (!res.ok) throw new Error('Token Outlook invalide');
-  return (await res.json()).value?.map(m => ({ id: m.id, from: m.from?.emailAddress?.address || 'Inconnu', subject: m.subject || '(Sans objet)', date: m.receivedDateTime || '', snippet: m.bodyPreview || '', unread: !m.isRead })) || [];
-}
-
-function renderEmails(emails) {
-  const wrap = document.getElementById('emailsWrap');
-  const list = document.getElementById('emailsList');
-  list.innerHTML = '';
-  if (!emails.length) { list.innerHTML = '<p style="color:var(--t500);font-size:.875rem">Aucun email.</p>'; wrap.style.display = 'block'; return; }
-  emails.forEach(email => {
-    const row = document.createElement('div');
-    row.className = 'email-row' + (email.unread ? ' unread' : '');
-    const dateStr = email.date ? new Date(email.date).toLocaleDateString('fr-FR') : '';
-    row.innerHTML = `<div class="email-top"><span class="email-from">${escHtml(email.from)}</span><span class="email-date">${dateStr}</span></div><div class="email-subj">${escHtml(email.subject)}</div><div class="email-prev">${escHtml(email.snippet.slice(0,100))}…</div><div class="email-acts"><button class="btn btn-sm btn-ghost" onclick="summarizeEmail(this)" data-subj="${encodeURIComponent(email.subject)}" data-body="${encodeURIComponent(email.snippet)}">🤖 Résumer</button></div>`;
-    list.appendChild(row);
-  });
-  wrap.style.display = 'block';
-}
-
-async function summarizeEmail(btn) {
-  const subj = decodeURIComponent(btn.dataset.subj);
-  const body = decodeURIComponent(btn.dataset.body);
-  btn.disabled = true; btn.textContent = '⏳…';
-  try {
-    const result = await callAI(`Résume cet email en 3 points clés et propose une réponse si utile.\nSujet: ${subj}\nContenu: ${body}`, 500);
-    const existing = btn.closest('.email-row').querySelector('.email-summary');
-    if (existing) existing.remove();
-    const div = document.createElement('div');
-    div.className = 'email-summary';
-    div.style.cssText = 'margin-top:.6rem;padding:.6rem .75rem;background:rgba(99,102,241,.08);border:1px solid rgba(99,102,241,.2);border-radius:8px;font-size:.8rem;color:var(--t300);line-height:1.55';
-    div.innerHTML = markdownToHtml(result);
-    btn.closest('.email-row').appendChild(div);
-    addToLibrary({ title: 'Email — ' + subj, content: result, module: 'email' });
-  } catch (err) { showNotif(err.message); }
-  finally { btn.disabled = false; btn.textContent = '🤖 Résumer'; }
-}
-
-// ── MODULE 5 : STOCKAGE ────────────────────────────────────
-function selectStorageProvider(name) {
-  state.storageProvider = name;
-  document.querySelectorAll('[id^="sprov-"]').forEach(el => el.classList.remove('active'));
-  document.getElementById('sprov-' + name).classList.add('active');
-  ['gdrive','dropbox','onedrive'].forEach(p => {
-    document.getElementById('storageConfig' + p.charAt(0).toUpperCase() + p.slice(1)).style.display = p === name ? '' : 'none';
-  });
-}
-
-async function connectStorage() {
-  if (!checkConnection()) return;
-  try {
-    let files = [];
-    if (state.storageProvider === 'gdrive')   files = await listGDriveFiles();
-    if (state.storageProvider === 'dropbox')  files = await listDropboxFiles();
-    if (state.storageProvider === 'onedrive') files = await listOneDriveFiles();
-    renderStorageFiles(files);
-  } catch (err) { showNotif('Erreur stockage : ' + err.message); }
-}
-
-async function listGDriveFiles() {
-  const token = document.getElementById('gdriveToken').value.trim();
-  const fId   = document.getElementById('gdriveFolderId').value.trim();
-  if (!token) throw new Error('Access Token Drive requis');
-  const q = fId ? `'${fId}' in parents` : "'root' in parents";
-  const res = await fetch(`https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(q)}&fields=files(id,name,size,mimeType)&pageSize=50`, { headers: { Authorization: 'Bearer ' + token } });
-  if (!res.ok) throw new Error('Token Drive invalide');
-  return (await res.json()).files?.map(f => ({ id: f.id, name: f.name, size: f.size ? formatSize(parseInt(f.size)) : '—', source: 'gdrive' })) || [];
-}
-
-async function listDropboxFiles() {
-  const token = document.getElementById('dropboxToken').value.trim();
-  const path  = document.getElementById('dropboxPath').value.trim() || '';
-  if (!token) throw new Error('Access Token Dropbox requis');
-  const res = await fetch('https://api.dropboxapi.com/2/files/list_folder', { method: 'POST', headers: { Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ path: path || '', recursive: false }) });
-  if (!res.ok) throw new Error('Token Dropbox invalide');
-  return (await res.json()).entries?.filter(e => e['.tag'] === 'file').map(f => ({ id: f.id, name: f.name, size: f.size ? formatSize(f.size) : '—', source: 'dropbox' })) || [];
-}
-
-async function listOneDriveFiles() {
-  const token = document.getElementById('onedriveToken').value.trim();
-  if (!token) throw new Error('Access Token OneDrive requis');
-  const res = await fetch('https://graph.microsoft.com/v1.0/me/drive/root/children?$select=id,name,size,file', { headers: { Authorization: 'Bearer ' + token } });
-  if (!res.ok) throw new Error('Token OneDrive invalide');
-  return (await res.json()).value?.filter(f => f.file).map(f => ({ id: f.id, name: f.name, size: f.size ? formatSize(f.size) : '—', source: 'onedrive' })) || [];
-}
-
-function renderStorageFiles(files) {
-  const wrap = document.getElementById('storageWrap');
-  const list = document.getElementById('storageList');
-  state.selectedStorageFiles.clear(); list.innerHTML = '';
-  if (!files.length) { list.innerHTML = '<p style="color:var(--t500);font-size:.875rem">Aucun fichier trouvé.</p>'; wrap.style.display = 'block'; return; }
-  files.forEach(file => {
-    const ext = file.name.split('.').pop().toLowerCase();
-    const ico = { pdf: '📄', docx: '📝', xlsx: '📊', csv: '📋', txt: '📃' }[ext] || '📎';
-    const row = document.createElement('div'); row.className = 'storage-row';
-    row.innerHTML = `<input type="checkbox" style="accent-color:var(--orange)" onchange="toggleStorageFile('${file.id}',this)"><span class="storage-ico">${ico}</span><span class="storage-name">${escHtml(file.name)}</span><span class="storage-sz">${file.size}</span><div class="storage-acts"><button class="btn btn-sm btn-ghost" onclick="analyzeStorageFile('${encodeURIComponent(file.name)}','${file.id}','${file.source}')">🔍 Analyser</button></div>`;
-    list.appendChild(row);
-  });
-  wrap.style.display = 'block';
-}
-
-function toggleStorageFile(id, cb) { if (cb.checked) state.selectedStorageFiles.add(id); else state.selectedStorageFiles.delete(id); }
-function analyzeSelectedFiles() { if (!state.selectedStorageFiles.size) { showNotif('Sélectionnez au moins un fichier.'); return; } showNotif(`Analyse de ${state.selectedStorageFiles.size} fichier(s)…`); }
-
-async function analyzeStorageFile(encodedName, fileId, source) {
-  if (!checkConnection()) return;
-  const name = decodeURIComponent(encodedName);
-  showNotif(`Analyse de "${name}"…`);
-  try {
-    const result = await callAI(`Analyse ce fichier cloud nommé "${name}" (source: ${source}). Fournis un résumé exécutif en Markdown avec les points clés attendus pour ce type de fichier.`, 1000);
-    document.getElementById('storageOutput').innerHTML = `
-      <div class="output-bar"><span class="output-lbl">📂 ${escHtml(name)}</span><div class="output-acts"><button class="btn btn-sm btn-ghost" onclick="copyOutput('storageContent')">📋 Copier</button><button class="btn btn-sm btn-primary" onclick="exportPdf('storageContent')">⬇️ PDF</button></div></div>
-      <div class="output-body" id="storageContent">${markdownToHtml(result)}</div>`;
-    document.getElementById('storageOutput').style.display = 'block';
-    addToLibrary({ title: 'Cloud — ' + name, content: result, module: 'storage' });
-  } catch (err) { showNotif(err.message); }
 }
 
 // ── EXPORT ─────────────────────────────────────────────────
@@ -1255,10 +1108,37 @@ const INTEG_CONFIG = {
       { key: 'listId', label: 'ID de la liste', type: 'text',     placeholder: 'xxxxxxxxxxxxxxxxxxxxxxxx' },
     ],
   },
-  googlekeep: {
-    logo: '🟡', name: 'Google Keep',
-    desc: 'Bientôt disponible',
-    fields: [],
+  gdrive: {
+    logo: '📁', name: 'Google Drive',
+    desc: 'Sauvegardez vos documents directement dans Google Drive',
+    fields: [
+      { key: 'token',    label: 'Access Token Google Drive', type: 'password', placeholder: 'ya29.A0…' },
+      { key: 'folderId', label: 'ID du dossier (optionnel)', type: 'text',     placeholder: '1BxiMVs0XRA5…' },
+    ],
+  },
+  dropbox: {
+    logo: '💧', name: 'Dropbox',
+    desc: 'Exportez vos documents vers Dropbox',
+    fields: [
+      { key: 'token', label: 'Access Token Dropbox', type: 'password', placeholder: 'sl.A0…' },
+      { key: 'path',  label: 'Dossier de destination', type: 'text',   placeholder: '/Documents/Archiva' },
+    ],
+  },
+  gmail: {
+    logo: '📧', name: 'Gmail',
+    desc: 'Envoyez vos documents par email via Gmail',
+    fields: [
+      { key: 'token', label: 'Access Token Gmail',    type: 'password', placeholder: 'ya29.A0…' },
+      { key: 'to',    label: 'Destinataire par défaut', type: 'text',   placeholder: 'destinataire@email.com' },
+    ],
+  },
+  outlook: {
+    logo: '📮', name: 'Outlook',
+    desc: 'Envoyez vos documents par email via Outlook',
+    fields: [
+      { key: 'token', label: 'Access Token Microsoft Graph', type: 'password', placeholder: 'eyJ…' },
+      { key: 'to',    label: 'Destinataire par défaut',      type: 'text',     placeholder: 'destinataire@email.com' },
+    ],
   },
 };
 
@@ -1277,7 +1157,7 @@ function renderIntegrations() {
       dot.className = 'integ-dot on';
       if (btn && !btn.disabled) { btn.textContent = 'Déconnecter'; btn.onclick = () => disconnectInteg(key); }
     } else {
-      dot.className = key === 'googlekeep' ? 'integ-dot soon' : 'integ-dot off';
+      dot.className = 'integ-dot off';
       if (btn && !btn.disabled) { btn.textContent = 'Connecter'; btn.onclick = () => openIntegModal(key); }
     }
   });
@@ -1361,6 +1241,10 @@ const INTEG_KEYWORDS = {
   slack:    ['slack'],
   excel:    ['excel', 'onedrive'],
   trello:   ['trello'],
+  gdrive:   ['google drive', 'gdrive', 'drive google'],
+  dropbox:  ['dropbox'],
+  gmail:    ['gmail', 'google mail'],
+  outlook:  ['outlook', 'hotmail'],
 };
 
 function detectIntegCommands(text) {
@@ -1427,6 +1311,587 @@ async function checkAndRunInteg(instructions, content, title) {
   }
 }
 
+// ── ASSISTANT IA CHAT ──────────────────────────────────────
+const chatMessages = [];
+
+function renderChatMessage(msg) {
+  const history = document.getElementById('chatHistory');
+  if (!history) return;
+  const div = document.createElement('div');
+  const isUser = msg.role === 'user';
+  div.style.cssText = `display:flex;gap:.65rem;align-items:flex-start;${isUser ? 'flex-direction:row-reverse' : ''}`;
+  const avatar = document.createElement('div');
+  avatar.style.cssText = 'width:2rem;height:2rem;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.9rem;flex-shrink:0;' + (isUser ? 'background:rgba(99,102,241,.2)' : 'background:rgba(249,115,22,.15)');
+  avatar.textContent = isUser ? '👤' : '🤖';
+  const bubble = document.createElement('div');
+  bubble.style.cssText = 'max-width:78%;padding:.7rem .95rem;border-radius:1rem;font-size:.875rem;line-height:1.6;' +
+    (isUser ? 'background:rgba(99,102,241,.12);border:1px solid rgba(99,102,241,.2);border-top-right-radius:.25rem'
+            : 'background:var(--bg2);border:1px solid var(--border);border-top-left-radius:.25rem');
+  bubble.innerHTML = isUser ? escHtml(msg.content) : markdownToHtml(msg.content);
+  div.appendChild(avatar);
+  div.appendChild(bubble);
+  history.appendChild(div);
+  history.scrollTop = history.scrollHeight;
+}
+
+function chatQuick(text) {
+  const input = document.getElementById('chatInput');
+  if (input) { input.value = text; sendChatMessage(); }
+}
+
+async function sendChatMessage() {
+  if (!checkConnection()) return;
+  const input = document.getElementById('chatInput');
+  const text  = input?.value.trim();
+  if (!text) return;
+  input.value = '';
+
+  const userMsg = { role: 'user', content: text };
+  chatMessages.push(userMsg);
+  renderChatMessage(userMsg);
+
+  const btn = document.getElementById('chatSendBtn');
+  if (btn) { btn.disabled = true; btn.innerHTML = '⏳'; }
+
+  const integs    = loadIntegrations();
+  const templates = loadTemplates();
+  const lib       = loadLibrary();
+  const connectedTools = Object.keys(integs).filter(k => integs[k]).join(', ') || 'aucun';
+  const templateNames  = templates.map(t => t.name).join(', ') || 'aucun';
+  const recentDocs     = lib.slice(0, 5).map(d => d.title).join(', ') || 'aucun';
+
+  const systemContext = `Tu es l'assistant IA intégré d'Archiva, une plateforme SaaS de gestion documentaire.
+Capacités disponibles :
+- Générer des documents (contrats, rapports, propositions, etc.)
+- Extraire et résumer des fichiers
+- Analyser des données avec graphiques
+- Exporter vers les outils connectés : ${connectedTools}
+Modèles de documents disponibles : ${templateNames}
+Documents récents en bibliothèque : ${recentDocs}
+
+Réponds en français. Si l'utilisateur demande une génération de document, génère-le directement en Markdown complet et professionnel. Si l'utilisateur veut exporter, dis-lui ce que tu fais. Sois concis et utile.`;
+
+  const history = chatMessages.slice(-6).map(m => ({ role: m.role, content: m.content }));
+
+  try {
+    const result = await callAI(systemContext + '\n\nConversation précédente :\n' + history.slice(0,-1).map(m => m.role + ': ' + m.content).join('\n') + '\n\nUtilisateur : ' + text, 2500);
+
+    const assistantMsg = { role: 'assistant', content: result };
+    chatMessages.push(assistantMsg);
+    renderChatMessage(assistantMsg);
+
+    if (result.length > 300 && (result.includes('##') || result.includes('**'))) {
+      addToLibrary({ title: 'Chat — ' + text.slice(0, 60), content: result, module: 'chat' });
+    }
+    await checkAndRunInteg(text, result, 'Chat — ' + text.slice(0, 60));
+    if (isTriggerRequest(text)) await createTriggerFromDescription(text);
+  } catch (err) {
+    const errMsg = { role: 'assistant', content: `Désolé, une erreur s'est produite : ${err.message}` };
+    chatMessages.push(errMsg);
+    renderChatMessage(errMsg);
+  } finally {
+    if (btn) { btn.disabled = false; btn.innerHTML = '<svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>'; }
+  }
+}
+
+// ── SIGNATURES ────────────────────────────────────────────
+let _sigImageBase64 = '';
+
+function loadSignatures() {
+  try { return JSON.parse(localStorage.getItem('archiva_signatures') || '[]'); } catch { return []; }
+}
+function saveSignaturesStore(arr) { localStorage.setItem('archiva_signatures', JSON.stringify(arr)); }
+function getActiveSignature() { return loadSignatures().find(s => s.active) || null; }
+
+function renderSignatureBlock(sig) {
+  const info = [
+    sig.name  ? `<strong>${escHtml(sig.name)}</strong>${sig.title ? ` — ${escHtml(sig.title)}` : ''}` : '',
+    sig.company ? escHtml(sig.company) : '',
+    sig.email   ? escHtml(sig.email)   : '',
+  ].filter(Boolean).join('<br>');
+
+  return `
+<div style="margin-top:2.5rem;padding-top:1.5rem;border-top:1px solid rgba(249,115,22,.25)">
+  <img src="${sig.image}" alt="Signature" style="max-height:80px;max-width:220px;display:block;margin-bottom:.5rem;mix-blend-mode:multiply;opacity:.9">
+  ${info ? `<div style="font-size:.8rem;color:var(--t400);line-height:1.6">${info}</div>` : ''}
+</div>`;
+}
+
+function renderSignatures() {
+  const sigs  = loadSignatures();
+  const count = document.getElementById('signaturesCount');
+  if (count) count.textContent = sigs.length;
+  const list = document.getElementById('signaturesList');
+  if (!list) return;
+  if (!sigs.length) {
+    list.innerHTML = '<p style="font-size:.8rem;color:var(--t500);margin:.25rem 0 .5rem">Aucune signature. Cliquez sur ➕ pour en ajouter une.</p>';
+    return;
+  }
+  list.innerHTML = sigs.map(s => `
+    <div style="background:var(--bg2);border:1px solid ${s.active ? 'var(--orange)' : 'var(--border)'};border-radius:.5rem;padding:.6rem .9rem;display:flex;align-items:center;gap:.75rem">
+      <img src="${s.image}" alt="sig" style="height:36px;max-width:90px;object-fit:contain;opacity:.85;mix-blend-mode:multiply;flex-shrink:0">
+      <div style="flex:1;min-width:0">
+        <div style="font-size:.83rem;font-weight:600;color:var(--t100)">${escHtml(s.name || 'Signature')}</div>
+        ${s.company ? `<div style="font-size:.73rem;color:var(--t500)">${escHtml(s.company)}</div>` : ''}
+      </div>
+      <div style="display:flex;align-items:center;gap:.5rem;flex-shrink:0">
+        ${s.active
+          ? `<span style="font-size:.72rem;background:rgba(249,115,22,.12);color:var(--orange);padding:.2rem .5rem;border-radius:9999px;font-weight:600">Active</span>`
+          : `<button onclick="activateSignature(${s.id})" style="font-size:.72rem;background:var(--glass);border:1px solid var(--border);color:var(--t300);padding:.2rem .5rem;border-radius:9999px;cursor:pointer">Activer</button>`}
+        <button onclick="deleteSignature(${s.id})" style="background:none;border:none;color:var(--t400);cursor:pointer;font-size:.9rem" title="Supprimer">🗑</button>
+      </div>
+    </div>`).join('');
+}
+
+function toggleSignatures() {
+  document.getElementById('signaturesBody').classList.toggle('open');
+  document.getElementById('signaturesToggle').classList.toggle('open');
+}
+
+function openSignatureModal() {
+  _sigImageBase64 = '';
+  ['sigName','sigTitle','sigCompany','sigEmail'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+  document.getElementById('signatureModalError').style.display = 'none';
+  document.getElementById('sigImagePreviewWrap').style.display  = 'none';
+  document.getElementById('sigImagePlaceholder').style.display  = '';
+  document.getElementById('sigImageInput').value = '';
+  document.getElementById('signatureModal').style.display = 'flex';
+}
+
+function closeSignatureModal() {
+  document.getElementById('signatureModal').style.display = 'none';
+}
+
+function handleSigImageSelect(event) {
+  const file = event.target.files?.[0];
+  if (file) loadSigImage(file);
+}
+
+function handleSigImageDrop(event) {
+  event.preventDefault();
+  const file = event.dataTransfer.files?.[0];
+  if (file) loadSigImage(file);
+}
+
+function loadSigImage(file) {
+  const reader = new FileReader();
+  reader.onload = e => {
+    _sigImageBase64 = e.target.result;
+    document.getElementById('sigImagePreview').src     = _sigImageBase64;
+    document.getElementById('sigImagePreviewWrap').style.display = '';
+    document.getElementById('sigImagePlaceholder').style.display = 'none';
+  };
+  reader.readAsDataURL(file);
+}
+
+function saveSignature() {
+  const errEl = document.getElementById('signatureModalError');
+  errEl.style.display = 'none';
+  if (!_sigImageBase64) {
+    errEl.textContent = 'Veuillez importer une image de signature.';
+    errEl.style.display = 'block';
+    return;
+  }
+  const name = document.getElementById('sigName').value.trim();
+  const sigs = loadSignatures().map(s => ({ ...s, active: false }));
+  sigs.unshift({
+    id:      Date.now(),
+    image:   _sigImageBase64,
+    name,
+    title:   document.getElementById('sigTitle').value.trim(),
+    company: document.getElementById('sigCompany').value.trim(),
+    email:   document.getElementById('sigEmail').value.trim(),
+    active:  true,
+  });
+  saveSignaturesStore(sigs);
+  renderSignatures();
+  closeSignatureModal();
+  showNotif('✍️ Signature enregistrée et activée.');
+}
+
+function activateSignature(id) {
+  saveSignaturesStore(loadSignatures().map(s => ({ ...s, active: s.id === id })));
+  renderSignatures();
+}
+
+function deleteSignature(id) {
+  saveSignaturesStore(loadSignatures().filter(s => s.id !== id));
+  renderSignatures();
+}
+
+// ── MODÈLES DE DOCUMENTS ───────────────────────────────────
+function loadTemplates() {
+  try { return JSON.parse(localStorage.getItem('archiva_templates') || '[]'); }
+  catch { return []; }
+}
+function saveTemplatesStore(arr) {
+  localStorage.setItem('archiva_templates', JSON.stringify(arr));
+}
+
+function renderTemplates() {
+  const templates = loadTemplates();
+  const count = document.getElementById('templatesCount');
+  if (count) count.textContent = templates.length;
+  const list = document.getElementById('templatesList');
+  if (!list) return;
+  if (!templates.length) {
+    list.innerHTML = '<p style="font-size:.8rem;color:var(--t500);margin:0">Aucun modèle enregistré.</p>';
+    return;
+  }
+  list.innerHTML = templates.map(t => `
+    <div style="display:flex;align-items:center;justify-content:space-between;background:var(--bg2);border:1px solid var(--border);border-radius:.5rem;padding:.6rem .85rem;gap:.75rem">
+      <div style="min-width:0">
+        <div style="font-size:.85rem;font-weight:600;color:var(--t100);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(t.name)}</div>
+        <div style="font-size:.74rem;color:var(--t500);margin-top:.15rem">${t.date} · ${t.content.length} caractères</div>
+      </div>
+      <button onclick="deleteTemplate(${t.id})" style="background:none;border:none;color:var(--t400);font-size:1rem;cursor:pointer;flex-shrink:0;padding:.25rem" title="Supprimer">🗑</button>
+    </div>`).join('');
+}
+
+function toggleTemplates() {
+  document.getElementById('templatesBody').classList.toggle('open');
+  document.getElementById('templatesToggle').classList.toggle('open');
+}
+
+// current file content stored while modal is open
+let _templateFileContent = '';
+
+function openTemplateModal() {
+  _templateFileContent = '';
+  document.getElementById('templateNameInput').value  = '';
+  document.getElementById('templatePasteText').value  = '';
+  document.getElementById('templateFilePreview').textContent = '';
+  document.getElementById('templateModalError').style.display = 'none';
+  switchTemplateTab('file');
+  document.getElementById('templateModal').style.display = 'flex';
+  setTimeout(() => document.getElementById('templateNameInput').focus(), 80);
+}
+
+function closeTemplateModal() {
+  document.getElementById('templateModal').style.display = 'none';
+}
+
+function switchTemplateTab(tab) {
+  document.getElementById('ttab-file').classList.toggle('active', tab === 'file');
+  document.getElementById('ttab-paste').classList.toggle('active', tab === 'paste');
+  document.getElementById('ttab-content-file').style.display  = tab === 'file'  ? '' : 'none';
+  document.getElementById('ttab-content-paste').style.display = tab === 'paste' ? '' : 'none';
+}
+
+async function handleTemplateFile(event) {
+  const file = event.target.files?.[0];
+  if (!file) return;
+  document.getElementById('templateFilePreview').textContent = `Lecture de "${file.name}"…`;
+  try {
+    _templateFileContent = await readFileText(file);
+    document.getElementById('templateFilePreview').textContent = `✓ "${file.name}" — ${_templateFileContent.length} caractères`;
+  } catch (err) {
+    document.getElementById('templateFilePreview').textContent = `✗ Erreur : ${err.message}`;
+    _templateFileContent = '';
+  }
+}
+
+async function handleTemplateFileDrop(event) {
+  event.preventDefault();
+  const file = event.dataTransfer.files?.[0];
+  if (!file) return;
+  document.getElementById('templateFilePreview').textContent = `Lecture de "${file.name}"…`;
+  try {
+    _templateFileContent = await readFileText(file);
+    document.getElementById('templateFilePreview').textContent = `✓ "${file.name}" — ${_templateFileContent.length} caractères`;
+  } catch (err) {
+    document.getElementById('templateFilePreview').textContent = `✗ Erreur : ${err.message}`;
+    _templateFileContent = '';
+  }
+}
+
+function saveTemplate() {
+  const name = document.getElementById('templateNameInput').value.trim();
+  const errEl = document.getElementById('templateModalError');
+  errEl.style.display = 'none';
+
+  if (!name) { errEl.textContent = 'Veuillez donner un nom au modèle.'; errEl.style.display = 'block'; return; }
+
+  const activeTab = document.getElementById('ttab-paste').classList.contains('active') ? 'paste' : 'file';
+  let content = '';
+  if (activeTab === 'paste') {
+    content = document.getElementById('templatePasteText').value.trim();
+    if (!content) { errEl.textContent = 'Veuillez coller du texte.'; errEl.style.display = 'block'; return; }
+  } else {
+    content = _templateFileContent;
+    if (!content) { errEl.textContent = 'Veuillez importer un fichier.'; errEl.style.display = 'block'; return; }
+  }
+
+  const templates = loadTemplates();
+  if (templates.find(t => t.name.toLowerCase() === name.toLowerCase())) {
+    errEl.textContent = `Un modèle nommé "${name}" existe déjà.`;
+    errEl.style.display = 'block';
+    return;
+  }
+
+  templates.unshift({
+    id:      Date.now(),
+    name,
+    content: content.slice(0, 50000),
+    date:    new Date().toLocaleDateString('fr-FR'),
+  });
+  saveTemplatesStore(templates);
+  renderTemplates();
+  closeTemplateModal();
+  showNotif(`✓ Modèle "${name}" enregistré.`);
+}
+
+function deleteTemplate(id) {
+  const templates = loadTemplates().filter(t => t.id !== id);
+  saveTemplatesStore(templates);
+  renderTemplates();
+}
+
+function buildTemplateContext(instructionText) {
+  if (!instructionText) return '';
+  const templates = loadTemplates();
+  if (!templates.length) return '';
+  const lower = instructionText.toLowerCase();
+  const matched = templates.filter(t => lower.includes(t.name.toLowerCase()));
+  if (!matched.length) return '';
+  return matched.map(t =>
+    `\n\n--- MODÈLE DE RÉFÉRENCE : "${t.name}" ---\n${t.content.slice(0, 8000)}\n--- FIN DU MODÈLE ---`
+  ).join('');
+}
+
+// ── DÉCLENCHEURS & WORKFLOWS ───────────────────────────────
+function loadTriggers() {
+  try { return JSON.parse(localStorage.getItem('archiva_triggers') || '[]'); } catch { return []; }
+}
+function saveTriggersStore(arr) { localStorage.setItem('archiva_triggers', JSON.stringify(arr)); }
+
+function renderTriggers() {
+  const triggers = loadTriggers();
+  const count = document.getElementById('triggersCount');
+  if (count) count.textContent = triggers.length;
+  const list = document.getElementById('triggersList');
+  if (!list) return;
+  if (!triggers.length) {
+    list.innerHTML = '<p style="font-size:.8rem;color:var(--t500);margin:0">Aucun déclencheur configuré.</p>';
+    return;
+  }
+  const freqLabel = { daily: 'Quotidien', weekly: 'Hebdomadaire', monthly: 'Mensuel' };
+  const days = ['Dim','Lun','Mar','Mer','Jeu','Ven','Sam'];
+  list.innerHTML = triggers.map(t => {
+    let schedLabel = freqLabel[t.freq] + ' à ' + t.time;
+    if (t.freq === 'weekly')  schedLabel += ' — ' + (days[t.weekday] || '');
+    if (t.freq === 'monthly') schedLabel += ' — jour ' + t.day;
+    const lastRun = t.lastRun ? 'Dernière exécution : ' + new Date(t.lastRun).toLocaleDateString('fr-FR') : 'Jamais exécuté';
+    return `<div style="background:var(--bg2);border:1px solid var(--border);border-radius:.5rem;padding:.7rem .9rem;display:flex;gap:.75rem;align-items:flex-start">
+      <div style="flex:1;min-width:0">
+        <div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap">
+          <span style="font-size:.85rem;font-weight:600;color:var(--t100)">${escHtml(t.name)}</span>
+          <span style="font-size:.72rem;background:rgba(249,115,22,.12);color:var(--orange);padding:.15rem .45rem;border-radius:9999px">${schedLabel}</span>
+          ${t.enabled ? '<span style="font-size:.72rem;background:rgba(16,185,129,.1);color:#10b981;padding:.15rem .45rem;border-radius:9999px">Actif</span>' : '<span style="font-size:.72rem;background:rgba(100,116,139,.1);color:var(--t400);padding:.15rem .45rem;border-radius:9999px">Pausé</span>'}
+        </div>
+        <div style="font-size:.77rem;color:var(--t400);margin-top:.3rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(t.action.slice(0, 80))}${t.action.length > 80 ? '…' : ''}</div>
+        <div style="font-size:.72rem;color:var(--t500);margin-top:.2rem">${lastRun}</div>
+      </div>
+      <div style="display:flex;gap:.4rem;flex-shrink:0">
+        <button onclick="toggleTriggerEnabled(${t.id})" style="background:none;border:none;cursor:pointer;font-size:.9rem;color:var(--t400)" title="${t.enabled ? 'Mettre en pause' : 'Activer'}">${t.enabled ? '⏸' : '▶️'}</button>
+        <button onclick="deleteTrigger(${t.id})" style="background:none;border:none;cursor:pointer;font-size:.9rem;color:var(--t400)" title="Supprimer">🗑</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function toggleTriggers() {
+  document.getElementById('triggersBody')?.classList.toggle('open');
+  document.getElementById('triggersToggle')?.classList.toggle('open');
+}
+
+function openTriggerModal() {
+  document.getElementById('triggerNameInput').value = '';
+  document.getElementById('triggerAction').value    = '';
+  document.getElementById('triggerFreq').value      = 'daily';
+  document.getElementById('triggerTime').value      = '08:00';
+  document.getElementById('triggerModalError').style.display = 'none';
+  updateTriggerSchedule();
+  document.getElementById('triggerModal').style.display = 'flex';
+  setTimeout(() => document.getElementById('triggerNameInput').focus(), 80);
+}
+
+function closeTriggerModal() { document.getElementById('triggerModal').style.display = 'none'; }
+
+function updateTriggerSchedule() {
+  const freq = document.getElementById('triggerFreq').value;
+  document.getElementById('triggerWeekdayField').style.display = freq === 'weekly'  ? '' : 'none';
+  document.getElementById('triggerDayField').style.display     = freq === 'monthly' ? '' : 'none';
+}
+
+function saveTrigger() {
+  const name   = document.getElementById('triggerNameInput').value.trim();
+  const action = document.getElementById('triggerAction').value.trim();
+  const errEl  = document.getElementById('triggerModalError');
+  errEl.style.display = 'none';
+  if (!name)   { errEl.textContent = 'Veuillez nommer le déclencheur.'; errEl.style.display = 'block'; return; }
+  if (!action) { errEl.textContent = "Veuillez décrire l'action à effectuer."; errEl.style.display = 'block'; return; }
+
+  const freq    = document.getElementById('triggerFreq').value;
+  const time    = document.getElementById('triggerTime').value || '08:00';
+  const weekday = parseInt(document.getElementById('triggerWeekday')?.value || '1');
+  const day     = parseInt(document.getElementById('triggerDay')?.value || '1');
+
+  const triggers = loadTriggers();
+  triggers.unshift({ id: Date.now(), name, action, freq, time, weekday, day, enabled: true, lastRun: null });
+  saveTriggersStore(triggers);
+  renderTriggers();
+  closeTriggerModal();
+  showNotif(`⚡ Déclencheur "${name}" créé.`);
+}
+
+function deleteTrigger(id) {
+  saveTriggersStore(loadTriggers().filter(t => t.id !== id));
+  renderTriggers();
+}
+
+function toggleTriggerEnabled(id) {
+  const triggers = loadTriggers().map(t => t.id === id ? { ...t, enabled: !t.enabled } : t);
+  saveTriggersStore(triggers);
+  renderTriggers();
+}
+
+async function checkTriggers() {
+  if (!state.connected) return;
+  const now = new Date();
+  const triggers = loadTriggers();
+  let changed = false;
+  for (const t of triggers) {
+    if (!t.enabled) continue;
+    const [h, m] = (t.time || '08:00').split(':').map(Number);
+    const shouldRun = (() => {
+      const lastRun = t.lastRun ? new Date(t.lastRun) : null;
+      const sameDay = (a, b) => a.toDateString() === b.toDateString();
+      if (lastRun && sameDay(lastRun, now)) return false;
+      if (now.getHours() < h || (now.getHours() === h && now.getMinutes() < m)) return false;
+      if (t.freq === 'daily')   return true;
+      if (t.freq === 'weekly')  return now.getDay() === (t.weekday ?? 1);
+      if (t.freq === 'monthly') return now.getDate() === (t.day ?? 1);
+      return false;
+    })();
+    if (!shouldRun) continue;
+    t.lastRun = now.toISOString();
+    changed = true;
+    showNotif(`⚡ Exécution du déclencheur "${t.name}"…`);
+    try {
+      const result = await callAI(`Tu es l'assistant Archiva. Exécute cette tâche automatique : ${t.action}`, 2500);
+      addToLibrary({ title: '⚡ ' + t.name, content: result, module: 'chat' });
+      await checkAndRunInteg(t.action, result, t.name);
+      showNotif(`✓ Déclencheur "${t.name}" exécuté.`);
+    } catch (err) { showNotif(`✗ Déclencheur "${t.name}" : ${err.message}`); }
+  }
+  if (changed) saveTriggersStore(triggers);
+}
+
+function isTriggerRequest(text) {
+  const lower = text.toLowerCase();
+  const patterns = [
+    'tous les matins', 'chaque matin', 'chaque jour', 'tous les jours',
+    'chaque semaine', 'tous les lundis', 'tous les mardis', 'tous les mercredis',
+    'tous les jeudis', 'tous les vendredis', 'chaque lundi', 'chaque vendredi',
+    'le 1er du mois', 'chaque mois', 'tous les mois', 'le premier du mois',
+    'automatiquement', 'automatise', 'planifie', 'programme', 'déclenche',
+    'chaque semaine à', 'à 8h', 'à 9h', 'à 7h', 'chaque nuit',
+  ];
+  return patterns.some(p => lower.includes(p));
+}
+
+async function createTriggerFromDescription(text) {
+  try {
+    const parsePrompt = `Analyse cette description de workflow et extrais les paramètres sous forme de JSON strict.
+Description : "${text}"
+
+Réponds UNIQUEMENT avec un JSON valide, sans texte autour, au format exact :
+{"name":"nom court du déclencheur","freq":"daily|weekly|monthly","time":"HH:MM","weekday":1,"day":1,"action":"description complète de l'action à exécuter"}
+
+Règles :
+- freq: "daily" si quotidien, "weekly" si hebdomadaire, "monthly" si mensuel
+- time: heure au format 24h (défaut "08:00")
+- weekday: jour de semaine 0-6 (0=dimanche, 1=lundi)
+- day: jour du mois 1-28
+- action: reprend fidèlement l'action demandée en français`;
+
+    const result  = await callAI(parsePrompt, 300);
+    const jsonMatch = result.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) return;
+    const parsed = JSON.parse(jsonMatch[0]);
+
+    const triggers = loadTriggers();
+    triggers.unshift({
+      id:      Date.now(),
+      name:    parsed.name   || text.slice(0, 50),
+      action:  parsed.action || text,
+      freq:    ['daily','weekly','monthly'].includes(parsed.freq) ? parsed.freq : 'daily',
+      time:    /^\d{2}:\d{2}$/.test(parsed.time) ? parsed.time : '08:00',
+      weekday: parseInt(parsed.weekday) || 1,
+      day:     parseInt(parsed.day)     || 1,
+      enabled: true,
+      lastRun: null,
+    });
+    saveTriggersStore(triggers);
+    renderTriggers();
+
+    const confirmMsg = { role: 'assistant', content: `⚡ **Déclencheur créé** : "${parsed.name}" — ${parsed.freq === 'daily' ? 'quotidien' : parsed.freq === 'weekly' ? 'hebdomadaire' : 'mensuel'} à ${parsed.time}. Visible dans la section Déclencheurs & Workflows.` };
+    chatMessages.push(confirmMsg);
+    renderChatMessage(confirmMsg);
+  } catch { /* silently skip if parsing fails */ }
+}
+
+async function createTriggerFromChat() {
+  if (!checkConnection()) return;
+  const input = document.getElementById('triggerChatInput');
+  const text  = input?.value.trim();
+  if (!text) return;
+
+  const btn = document.querySelector('#triggersBody button[onclick="createTriggerFromChat()"]');
+  if (btn) { btn.disabled = true; btn.textContent = '⏳'; }
+
+  try {
+    const parsePrompt = `Analyse cette description de workflow et extrais les paramètres sous forme de JSON strict.
+Description : "${text}"
+
+Réponds UNIQUEMENT avec un JSON valide, sans texte autour, au format exact :
+{"name":"nom court du déclencheur","freq":"daily|weekly|monthly","time":"HH:MM","weekday":1,"day":1,"action":"description complète de l'action à exécuter"}
+
+Règles :
+- freq: "daily" si quotidien, "weekly" si hebdomadaire, "monthly" si mensuel
+- time: heure au format 24h (défaut "08:00")
+- weekday: jour de semaine 0-6 (0=dimanche, 1=lundi) — pertinent si freq=weekly
+- day: jour du mois 1-28 — pertinent si freq=monthly
+- action: reprend fidèlement l'action demandée en français`;
+
+    const result = await callAI(parsePrompt, 300);
+    const jsonMatch = result.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) throw new Error('Format non reconnu');
+    const parsed = JSON.parse(jsonMatch[0]);
+
+    const triggers = loadTriggers();
+    triggers.unshift({
+      id:      Date.now(),
+      name:    parsed.name    || text.slice(0, 50),
+      action:  parsed.action  || text,
+      freq:    ['daily','weekly','monthly'].includes(parsed.freq) ? parsed.freq : 'daily',
+      time:    /^\d{2}:\d{2}$/.test(parsed.time) ? parsed.time : '08:00',
+      weekday: parseInt(parsed.weekday) || 1,
+      day:     parseInt(parsed.day)     || 1,
+      enabled: true,
+      lastRun: null,
+    });
+    saveTriggersStore(triggers);
+    renderTriggers();
+    input.value = '';
+    showNotif(`⚡ Déclencheur "${parsed.name || 'Nouveau'}" créé.`);
+  } catch (err) {
+    showNotif('✗ Impossible de créer le déclencheur : ' + err.message);
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = '⚡'; }
+  }
+}
 
 // ── CONTACT ────────────────────────────────────────────────
 function submitContact() {
