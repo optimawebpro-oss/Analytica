@@ -83,106 +83,60 @@
      PAGE : ACCUEIL
 ══════════════════════════════════════ -->
 <div class="page active" id="page-home">
-  <section class="hero" style="padding:0;background:#000;overflow:hidden">
+  <section class="hero" style="padding:0;background:#0a0f1e;overflow:hidden">
     <div id="c1">
-      <canvas id="stars-c"></canvas>
-      <canvas id="warp-c"></canvas>
-      <canvas id="docs-c"></canvas>
-      <div id="c1-ui">
-        <div class="c1-eyebrow">INTELLIGENCE DOCUMENTAIRE</div>
-        <div class="c1-h1">L'intelligence<br><span class="glow">documentaire</span><br>pour votre entreprise</div>
-        <div class="c1-sub">Générez, analysez, partagez — en quelques secondes.<br>100% RGPD · Hébergé en France.</div>
-        <div class="c1-btns">
-          <button class="c1-btn-p" onclick="showPage('ai')">Démarrer gratuitement</button>
-          <button class="c1-btn-s" onclick="showPage('pricing')">Voir les tarifs →</button>
+      <canvas id="sc"></canvas><canvas id="wc"></canvas><canvas id="dc"></canvas>
+      <div id="ui">
+        <div class="ey">INTELLIGENCE DOCUMENTAIRE</div>
+        <div class="h1">L'intelligence<br><span class="or">documentaire</span><br>pour votre entreprise</div>
+        <div class="sub">Générez, analysez, partagez — en quelques secondes.<br>100% RGPD · Hébergé en France.</div>
+        <div class="btns">
+          <button class="bp" onclick="showPage('ai')">Démarrer gratuitement</button>
+          <button class="bs" onclick="showPage('pricing')">Voir les tarifs →</button>
         </div>
       </div>
-      <div class="c1-line"></div>
-      <div class="c1-stats">
-        <div class="c1-stat"><div class="c1-stat-v" id="s1">0</div><div class="c1-stat-l">DOCUMENTS / MOIS</div></div>
-        <div class="c1-stat"><div class="c1-stat-v" id="s2">0%</div><div class="c1-stat-l">PRÉCISION IA</div></div>
-        <div class="c1-stat"><div class="c1-stat-v" id="s3">0+</div><div class="c1-stat-l">ENTREPRISES</div></div>
+      <div class="line"></div>
+      <div class="stats">
+        <div><div class="sv" id="s1">0</div><div class="sl">DOCUMENTS / MOIS</div></div>
+        <div><div class="sv" id="s2">0%</div><div class="sl">PRÉCISION IA</div></div>
+        <div><div class="sv" id="s3">0+</div><div class="sl">ENTREPRISES</div></div>
       </div>
     </div>
     <script>
     (function(){
-      var wrap=document.getElementById('c1');
-      var sc=document.getElementById('stars-c'),wc=document.getElementById('warp-c'),dcc=document.getElementById('docs-c');
-      [sc,wc,dcc].forEach(function(c){c.width=wrap.clientWidth;c.height=wrap.clientHeight});
-      var W=sc.width,H=sc.height,CX=W/2,CY=H/2;
-      var sctx=sc.getContext('2d'),wx=wc.getContext('2d'),dx=dcc.getContext('2d');
-      var STARS=Array.from({length:300},function(){return{x:(Math.random()-.5)*W*3,y:(Math.random()-.5)*H*3,z:Math.random()*W,pz:0}});
-      var speed=0;
-      function drawStars(){
-        sctx.fillStyle='rgba(0,0,0,0.18)';sctx.fillRect(0,0,W,H);
-        speed+=(14-speed)*0.04;
-        STARS.forEach(function(s){
-          s.pz=s.z;s.z-=speed;
-          if(s.z<=0){s.z=W;s.x=(Math.random()-.5)*W*3;s.y=(Math.random()-.5)*H*3;s.pz=s.z;}
-          var sx2=CX+(s.x/s.z)*W,sy2=CY+(s.y/s.z)*H;
-          var px2=CX+(s.x/s.pz)*W,py2=CY+(s.y/s.pz)*H;
-          var size=Math.max(0.3,(1-s.z/W)*3),alpha=Math.min(1,(1-s.z/W)*2);
-          var t=(1-s.z/W);
-          var r2=255,g2=Math.floor(100+t*100),b2=Math.floor(t*80);
-          sctx.strokeStyle='rgba('+r2+','+g2+','+b2+','+alpha+')';
-          sctx.lineWidth=size;sctx.beginPath();sctx.moveTo(px2,py2);sctx.lineTo(sx2,sy2);sctx.stroke();
-        });
-      }
-      var WARP=Array.from({length:60},function(_,i){return{angle:(i/60)*Math.PI*2,len:0,maxLen:Math.random()*130+60,speed:Math.random()*2+1,alpha:Math.random()*.25+.08,color:Math.random()>.5?'255,133,0':Math.random()>.5?'255,80,0':'200,100,0'}});
-      function drawWarp(){
-        wx.clearRect(0,0,W,H);
-        WARP.forEach(function(l){
-          l.len+=l.speed;if(l.len>l.maxLen)l.len=0;
-          var x1=CX+Math.cos(l.angle)*(80+l.len*.3),y1=CY+Math.sin(l.angle)*(80+l.len*.3)*.55;
-          var x2=CX+Math.cos(l.angle)*(80+l.len*.7),y2=CY+Math.sin(l.angle)*(80+l.len*.7)*.55;
-          wx.beginPath();wx.moveTo(x1,y1);wx.lineTo(x2,y2);
-          wx.strokeStyle='rgba('+l.color+','+l.alpha*(l.len/l.maxLen)+')';wx.lineWidth=0.8;wx.stroke();
-        });
-      }
-      var DOCS=[
-        {label:'Contrat.pdf',color:'#ff8500',glow:'255,133,0',icon:'📄',x:0,y:0,z:0,vz:0,vy:0,vx:0},
-        {label:'Rapport.docx',color:'#ffab40',glow:'255,171,64',icon:'📝',x:0,y:0,z:0,vz:0,vy:0,vx:0},
-        {label:'Data.xlsx',color:'#4ade80',glow:'74,222,128',icon:'📊',x:0,y:0,z:0,vz:0,vy:0,vx:0},
-        {label:'Brief.txt',color:'#c084fc',glow:'192,132,252',icon:'📋',x:0,y:0,z:0,vz:0,vy:0,vx:0},
-        {label:'Devis.pdf',color:'#ff6b6b',glow:'255,107,107',icon:'💼',x:0,y:0,z:0,vz:0,vy:0,vx:0},
-        {label:'CGV.pdf',color:'#fbbf24',glow:'251,191,36',icon:'⚖️',x:0,y:0,z:0,vz:0,vy:0,vx:0},
-      ];
-      function spawnDoc(d){d.x=(Math.random()-.5)*W*1.5;d.y=(Math.random()-.5)*H*1.2;d.z=W*1.5;d.vz=-(8+Math.random()*6);d.vx=(Math.random()-.5)*1;d.vy=(Math.random()-.5)*.8;}
-      DOCS.forEach(function(d,i){spawnDoc(d);d.z-=i*250;});
-      function rr(ctx,x,y,w,h,r){ctx.beginPath();ctx.moveTo(x+r,y);ctx.lineTo(x+w-r,y);ctx.quadraticCurveTo(x+w,y,x+w,y+r);ctx.lineTo(x+w,y+h-r);ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);ctx.lineTo(x+r,y+h);ctx.quadraticCurveTo(x,y+h,x,y+r);ctx.lineTo(x,y+r);ctx.quadraticCurveTo(x,y,x+r,y);ctx.closePath();}
-      function drawDocs(){
-        dx.clearRect(0,0,W,H);
-        DOCS.forEach(function(d){
-          d.z+=d.vz;d.x+=d.vx;d.y+=d.vy;
-          if(d.z<-200||d.z>W*2)spawnDoc(d);
-          if(d.z<=0)return;
-          var sx2=CX+(d.x/d.z)*W*.6+CX*.4,sy2=CY+(d.y/d.z)*H*.6+CY*.4;
-          var scale=Math.max(0.1,Math.min(2,(1-d.z/(W*1.5))*2.5));
-          var alpha=Math.min(1,scale*1.5);if(alpha<.05)return;
-          var w2=72*scale,h2=90*scale;
-          dx.save();dx.translate(sx2,sy2);dx.globalAlpha=alpha;
-          dx.shadowColor='rgba('+d.glow+',.6)';dx.shadowBlur=20*scale;
-          dx.fillStyle='rgba('+d.glow+',.1)';dx.strokeStyle='rgba('+d.glow+',.7)';dx.lineWidth=scale*.8;
-          rr(dx,-w2/2,-h2/2,w2,h2,6*scale);dx.fill();dx.stroke();dx.shadowBlur=0;
-          dx.font=(18*scale)+'px serif';dx.textAlign='center';dx.textBaseline='middle';
-          dx.fillStyle=d.color;dx.fillText(d.icon,0,-8*scale);
-          dx.font=(9*scale)+'px sans-serif';dx.fillStyle='rgba(255,255,255,.7)';dx.fillText(d.label,0,14*scale);
-          dx.restore();
-        });
-      }
-      function countUp(el,target,suffix,dur){
-        var start=performance.now();
-        function step(now){var p=Math.min((now-start)/dur,1),e=1-Math.pow(1-p,3);el.textContent=Math.round(target*e).toLocaleString()+suffix;if(p<1)requestAnimationFrame(step);}
-        requestAnimationFrame(step);
-      }
-      setTimeout(function(){
-        countUp(document.getElementById('s1'),50000,'+',2000);
-        countUp(document.getElementById('s2'),98,'%',1800);
-        countUp(document.getElementById('s3'),1200,'+',1600);
-      },3000);
-      sctx.fillStyle='#000';sctx.fillRect(0,0,W,H);
-      function loop(){drawStars();drawWarp();drawDocs();requestAnimationFrame(loop);}
-      loop();
+    var w=document.getElementById('c1');
+    var sc=document.getElementById('sc'),wc=document.getElementById('wc'),dc=document.getElementById('dc');
+    [sc,wc,dc].forEach(function(c){c.width=w.offsetWidth||680;c.height=w.offsetHeight||560;});
+    var W=sc.width,H=sc.height,CX=W/2,CY=H/2;
+    var sx=sc.getContext('2d'),wx=wc.getContext('2d'),dx=dc.getContext('2d');
+    var STARS=[];for(var i=0;i<300;i++)STARS.push({x:(Math.random()-.5)*W*3,y:(Math.random()-.5)*H*3,z:Math.random()*W,pz:0});
+    var spd=0;
+    function drawStars(){
+      sx.fillStyle='rgba(10,15,30,0.2)';sx.fillRect(0,0,W,H);
+      spd+=(14-spd)*.04;
+      STARS.forEach(function(s){
+        s.pz=s.z;s.z-=spd;
+        if(s.z<=0){s.z=W;s.x=(Math.random()-.5)*W*3;s.y=(Math.random()-.5)*H*3;s.pz=s.z;}
+        var x2=CX+(s.x/s.z)*W,y2=CY+(s.y/s.z)*H,px=CX+(s.x/s.pz)*W,py=CY+(s.y/s.pz)*H;
+        var sz=Math.max(.3,(1-s.z/W)*3),al=Math.min(1,(1-s.z/W)*2),t=(1-s.z/W);
+        sx.strokeStyle='rgba(255,'+(Math.floor(100+t*100))+','+(Math.floor(t*80))+','+al+')';
+        sx.lineWidth=sz;sx.beginPath();sx.moveTo(px,py);sx.lineTo(x2,y2);sx.stroke();
+      });
+    }
+    var WL=[];for(var j=0;j<60;j++)WL.push({angle:(j/60)*Math.PI*2,len:0,max:Math.random()*130+60,spd:Math.random()*2+1,al:Math.random()*.25+.08,c:Math.random()>.5?'255,133,0':Math.random()>.5?'255,80,0':'200,100,0'});
+    function drawWarp(){
+      wx.clearRect(0,0,W,H);
+      WL.forEach(function(l){l.len+=l.spd;if(l.len>l.max)l.len=0;var x1=CX+Math.cos(l.angle)*(80+l.len*.3),y1=CY+Math.sin(l.angle)*(80+l.len*.3)*.55,x2=CX+Math.cos(l.angle)*(80+l.len*.7),y2=CY+Math.sin(l.angle)*(80+l.len*.7)*.55;wx.beginPath();wx.moveTo(x1,y1);wx.lineTo(x2,y2);wx.strokeStyle='rgba('+l.c+','+l.al*(l.len/l.max)+')';wx.lineWidth=.8;wx.stroke();});
+    }
+    var DOCS=[{l:'Contrat.pdf',c:'#ff8500',g:'255,133,0',ic:'📄'},{l:'Rapport.docx',c:'#ffab40',g:'255,171,64',ic:'📝'},{l:'Data.xlsx',c:'#4ade80',g:'74,222,128',ic:'📊'},{l:'Brief.txt',c:'#c084fc',g:'192,132,252',ic:'📋'},{l:'Devis.pdf',c:'#ff6b6b',g:'255,107,107',ic:'💼'},{l:'CGV.pdf',c:'#fbbf24',g:'251,191,36',ic:'⚖️'}];
+    function sp(d){d.x=(Math.random()-.5)*W*1.5;d.y=(Math.random()-.5)*H*1.2;d.z=W*1.5;d.vz=-(8+Math.random()*6);d.vx=(Math.random()-.5);d.vy=(Math.random()-.5)*.8;}
+    DOCS.forEach(function(d,i){sp(d);d.z-=i*250;});
+    function rr(ctx,x,y,w,h,r){ctx.beginPath();ctx.moveTo(x+r,y);ctx.lineTo(x+w-r,y);ctx.quadraticCurveTo(x+w,y,x+w,y+r);ctx.lineTo(x+w,y+h-r);ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);ctx.lineTo(x+r,y+h);ctx.quadraticCurveTo(x,y+h,x,y+r);ctx.lineTo(x,y+r);ctx.quadraticCurveTo(x,y,x+r,y);ctx.closePath();}
+    function drawDocs(){dx.clearRect(0,0,W,H);DOCS.forEach(function(d){d.z+=d.vz;d.x+=d.vx;d.y+=d.vy;if(d.z<-200||d.z>W*2)sp(d);if(d.z<=0)return;var x2=CX+(d.x/d.z)*W*.6+CX*.4,y2=CY+(d.y/d.z)*H*.6+CY*.4,sc2=Math.max(.1,Math.min(2,(1-d.z/(W*1.5))*2.5)),al=Math.min(1,sc2*1.5);if(al<.05)return;var dw=72*sc2,dh=90*sc2;dx.save();dx.translate(x2,y2);dx.globalAlpha=al;dx.shadowColor='rgba('+d.g+',.6)';dx.shadowBlur=20*sc2;dx.fillStyle='rgba('+d.g+',.1)';dx.strokeStyle='rgba('+d.g+',.7)';dx.lineWidth=sc2*.8;rr(dx,-dw/2,-dh/2,dw,dh,6*sc2);dx.fill();dx.stroke();dx.shadowBlur=0;dx.font=(18*sc2)+'px serif';dx.textAlign='center';dx.textBaseline='middle';dx.fillStyle=d.c;dx.fillText(d.ic,0,-8*sc2);dx.font=(9*sc2)+'px sans-serif';dx.fillStyle='rgba(255,255,255,.7)';dx.fillText(d.l,0,14*sc2);dx.restore();});}
+    function cu(el,target,suf,dur){var st=performance.now();function step(now){var p=Math.min((now-st)/dur,1),e=1-Math.pow(1-p,3);el.textContent=Math.round(target*e).toLocaleString()+suf;if(p<1)requestAnimationFrame(step);}requestAnimationFrame(step);}
+    setTimeout(function(){cu(document.getElementById('s1'),50000,'+',2000);cu(document.getElementById('s2'),98,'%',1800);cu(document.getElementById('sk3'),1200,'+',1600);},3000);
+    sx.fillStyle='#0a0f1e';sx.fillRect(0,0,W,H);
+    function loop(){drawStars();drawWarp();drawDocs();requestAnimationFrame(loop);}loop();
     })();
     </script>
   </section>
@@ -205,123 +159,57 @@
       </div>
       <!-- Brain cinematic -->
       <div id="bw" style="margin-bottom:2.5rem;border-radius:1rem;overflow:hidden">
-        <canvas id="bg-c2"></canvas>
-        <canvas id="net-c2"></canvas>
-        <canvas id="pulse-c2"></canvas>
-        <div class="brain-ui">
-          <div class="metrics-top">
-            <div class="m-card"><div class="m-val" style="color:#ff8500;text-shadow:0 0 12px #ff8500">2 847</div><div class="m-lbl">DOCUMENTS TRAITÉS</div></div>
-            <div class="m-card"><div class="m-val" style="color:#4ade80;text-shadow:0 0 12px #4ade80">98.4%</div><div class="m-lbl">PRÉCISION GLOBALE</div></div>
-            <div class="m-card"><div class="m-val" style="color:#c084fc;text-shadow:0 0 12px #c084fc">1.8s</div><div class="m-lbl">TEMPS MOYEN</div></div>
-            <div class="m-card"><div class="m-val" style="color:#fbbf24;text-shadow:0 0 12px #fbbf24">1 200</div><div class="m-lbl">ENTREPRISES</div></div>
+        <canvas id="bgc"></canvas><canvas id="nc"></canvas><canvas id="pc"></canvas>
+        <div class="bui">
+          <div class="mt">
+            <div class="mc"><div class="mv" style="color:#ff8500;text-shadow:0 0 12px #ff8500">2 847</div><div class="ml">DOCUMENTS TRAITÉS</div></div>
+            <div class="mc"><div class="mv" style="color:#4ade80;text-shadow:0 0 12px #4ade80">98.4%</div><div class="ml">PRÉCISION GLOBALE</div></div>
+            <div class="mc"><div class="mv" style="color:#c084fc;text-shadow:0 0 12px #c084fc">1.8s</div><div class="ml">TEMPS MOYEN</div></div>
+            <div class="mc"><div class="mv" style="color:#fbbf24;text-shadow:0 0 12px #fbbf24">1 200</div><div class="ml">ENTREPRISES</div></div>
           </div>
-          <div class="side-panel left">
-            <div class="sp-title">MODULES ACTIFS</div>
-            <div class="sp-row"><span class="sp-label">Génération</span><div class="sp-bar-wrap"><div class="sp-bar" style="width:92%;background:#ff8500;box-shadow:0 0 6px #ff8500"></div></div></div>
-            <div class="sp-row"><span class="sp-label">Extraction</span><div class="sp-bar-wrap"><div class="sp-bar" style="width:78%;background:#c084fc;box-shadow:0 0 6px #c084fc"></div></div></div>
-            <div class="sp-row"><span class="sp-label">Analyse</span><div class="sp-bar-wrap"><div class="sp-bar" style="width:85%;background:#4ade80;box-shadow:0 0 6px #4ade80"></div></div></div>
-            <div class="sp-row"><span class="sp-label">Email</span><div class="sp-bar-wrap"><div class="sp-bar" style="width:64%;background:#fbbf24;box-shadow:0 0 6px #fbbf24"></div></div></div>
-            <div class="sp-row"><span class="sp-label">Cloud</span><div class="sp-bar-wrap"><div class="sp-bar" style="width:71%;background:#ffab40;box-shadow:0 0 6px #ffab40"></div></div></div>
+          <div class="sp l">
+            <div class="spt">MODULES ACTIFS</div>
+            <div class="sr"><span class="sl2">Génération</span><div class="sbw"><div class="sb" style="width:92%;background:#ff8500;box-shadow:0 0 6px #ff8500"></div></div></div>
+            <div class="sr"><span class="sl2">Extraction</span><div class="sbw"><div class="sb" style="width:78%;background:#c084fc;box-shadow:0 0 6px #c084fc"></div></div></div>
+            <div class="sr"><span class="sl2">Analyse</span><div class="sbw"><div class="sb" style="width:85%;background:#4ade80;box-shadow:0 0 6px #4ade80"></div></div></div>
+            <div class="sr"><span class="sl2">Email</span><div class="sbw"><div class="sb" style="width:64%;background:#fbbf24;box-shadow:0 0 6px #fbbf24"></div></div></div>
+            <div class="sr"><span class="sl2">Cloud</span><div class="sbw"><div class="sb" style="width:71%;background:#ffab40;box-shadow:0 0 6px #ffab40"></div></div></div>
           </div>
-          <div class="side-panel right">
-            <div class="sp-title">FLUX EN TEMPS RÉEL</div>
+          <div class="sp r">
+            <div class="spt">FLUX EN TEMPS RÉEL</div>
             <div id="feed" style="font-size:9px;color:rgba(255,255,255,.4);line-height:1.9"></div>
           </div>
-          <div class="center-label">
-            <div class="cl-main">ARCHIVA · NEURAL ENGINE</div>
-            <div class="cl-sub">Moteur IA · Actif</div>
-          </div>
-          <div class="bottom-strip">
-            <div class="bs-item"><div class="bs-dot" style="background:#4ade80"></div>Tous systèmes opérationnels</div>
-            <div class="bs-item"><div class="bs-dot" style="background:#ff8500;animation-delay:.4s"></div>IA connectée</div>
-            <div class="bs-item"><div class="bs-dot" style="background:#c084fc;animation-delay:.8s"></div>RGPD conforme · FR</div>
-            <div class="bs-item"><div class="bs-dot" style="background:#fbbf24;animation-delay:1.2s"></div>Uptime 99.9%</div>
+          <div class="cl"><div class="clm">ARCHIVA · NEURAL ENGINE</div><div class="cls">Moteur IA · Actif</div></div>
+          <div class="bs">
+            <div class="bi"><div class="bd" style="background:#4ade80"></div>Tous systèmes opérationnels</div>
+            <div class="bi"><div class="bd" style="background:#ff8500;animation-delay:.4s"></div>IA connectée</div>
+            <div class="bi"><div class="bd" style="background:#c084fc;animation-delay:.8s"></div>RGPD conforme · FR</div>
+            <div class="bi"><div class="bd" style="background:#fbbf24;animation-delay:1.2s"></div>Uptime 99.9%</div>
           </div>
         </div>
       </div>
       <script>
       (function(){
-        var bwe=document.getElementById('bw');
-        var bgc=document.getElementById('bg-c2'),nc=document.getElementById('net-c2'),pc=document.getElementById('pulse-c2');
-        [bgc,nc,pc].forEach(function(c){c.width=bwe.clientWidth;c.height=bwe.clientHeight});
-        var W=bgc.width,H=bgc.height,CX=W/2,CY=H/2-10;
-        var bg=bgc.getContext('2d'),nx=nc.getContext('2d'),px=pc.getContext('2d');
-        var N=80;
-        var nodes=Array.from({length:N},function(){
-          var theta=Math.random()*Math.PI*2,phi=Math.acos(2*Math.random()-1),r=60+Math.random()*130;
-          return{ox:Math.sin(phi)*Math.cos(theta)*r,oy:Math.sin(phi)*Math.sin(theta)*r*.45,oz:Math.cos(phi)*r,x:0,y:0,z:0,scale:1,r:Math.random()*2.5+.8,color:['255,133,0','255,171,64','29,158,117','192,132,252'][Math.floor(Math.random()*4)],pulsePhase:Math.random()*Math.PI*2,connections:[]};
-        });
-        nodes.forEach(function(n,i){
-          var dists=nodes.map(function(m,j){return{j:j,d:Math.hypot(n.ox-m.ox,n.oy-m.oy,n.oz-m.oz)}}).sort(function(a,b){return a.d-b.d});
-          n.connections=dists.slice(1,4).map(function(d){return d.j});
-        });
-        var PULSES=[];
-        function addPulse(){
-          var from=Math.floor(Math.random()*N);
-          var to=nodes[from].connections[Math.floor(Math.random()*nodes[from].connections.length)];
-          if(to!==undefined)PULSES.push({from:from,to:to,t:0,speed:.02+Math.random()*.02,color:nodes[from].color});
-        }
-        setInterval(addPulse,100);
-        var rot=0;
-        function project(ox,oy,oz){
-          var x=ox*Math.cos(rot)-oz*Math.sin(rot),z2=ox*Math.sin(rot)+oz*Math.cos(rot);
-          var fov=320,scale=fov/(fov+z2+200);
-          return{sx:CX+x*scale,sy:CY+oy*scale,z:z2,scale:scale};
-        }
-        function drawBg2(){
-          bg.clearRect(0,0,W,H);
-          var r=bg.createRadialGradient(CX,CY,0,CX,CY,W*.7);
-          r.addColorStop(0,'rgba(15,8,0,1)');r.addColorStop(.5,'rgba(5,3,0,1)');r.addColorStop(1,'rgba(0,0,0,1)');
-          bg.fillStyle=r;bg.fillRect(0,0,W,H);
-          for(var i=1;i<=4;i++){bg.beginPath();bg.ellipse(CX,CY,i*60,i*35,0,0,Math.PI*2);bg.strokeStyle='rgba(255,133,0,'+(0.04-i*.008)+')';bg.lineWidth=1;bg.stroke();}
-        }
-        function drawNet(t){
-          nx.clearRect(0,0,W,H);
-          nodes.forEach(function(n){var p=project(n.ox,n.oy,n.oz);n.x=p.sx;n.y=p.sy;n.z=p.z;n.scale=p.scale;});
-          var sorted=[...nodes].sort(function(a,b){return a.z-b.z});
-          sorted.forEach(function(n){
-            n.connections.forEach(function(ci){
-              var m=nodes[ci];
-              var alpha=Math.max(0,(1-((n.z+m.z)/2+200)/400)*.12);
-              nx.beginPath();nx.moveTo(n.x,n.y);nx.lineTo(m.x,m.y);
-              nx.strokeStyle='rgba(255,133,0,'+alpha+')';nx.lineWidth=.5;nx.stroke();
-            });
-          });
-          sorted.forEach(function(n){
-            var pulse=Math.sin(t*2+n.pulsePhase)*.4+.6;
-            var r2=n.r*n.scale*1.5;
-            nx.beginPath();nx.arc(n.x,n.y,r2*2.5,0,Math.PI*2);
-            nx.fillStyle='rgba('+n.color+',.06)';nx.fill();
-            nx.beginPath();nx.arc(n.x,n.y,r2,0,Math.PI*2);
-            nx.fillStyle='rgba('+n.color+','+(0.5*pulse)+')';
-            nx.shadowColor='rgba('+n.color+',.8)';nx.shadowBlur=8*n.scale;nx.fill();nx.shadowBlur=0;
-          });
-        }
-        function drawPulses(){
-          px.clearRect(0,0,W,H);
-          for(var i=PULSES.length-1;i>=0;i--){
-            var p=PULSES[i];p.t+=p.speed;
-            if(p.t>1){PULSES.splice(i,1);continue;}
-            var fn=nodes[p.from],tn=nodes[p.to];
-            var x=fn.x+(tn.x-fn.x)*p.t,y=fn.y+(tn.y-fn.y)*p.t;
-            var alpha=(1-Math.abs(p.t-.5)*2)*.9;
-            px.beginPath();px.arc(x,y,3,0,Math.PI*2);
-            px.fillStyle='rgba('+p.color+','+alpha+')';
-            px.shadowColor='rgba('+p.color+',1)';px.shadowBlur=12;px.fill();px.shadowBlur=0;
-          }
-        }
-        var feedItems=['Contrat analysé · 0.8s','Rapport généré · 1.2s','CV extrait · 0.6s','Email envoyé · 0.3s','PDF exporté · 0.4s','Risques détectés · 1.1s'];
-        var fi=0;var feedEl=document.getElementById('feed');
-        function updateFeed(){
-          var lines=feedEl.innerHTML.split('<br>').filter(Boolean);
-          if(lines.length>5)lines.shift();
-          lines.push('<span style="color:rgba(255,133,0,.6)">›</span> '+feedItems[fi%feedItems.length]);
-          feedEl.innerHTML=lines.join('<br>');fi++;
-        }
-        setInterval(updateFeed,1200);updateFeed();
-        var tt=0;
-        function loop2(){tt+=.008;rot+=.004;drawBg2();drawNet(tt);drawPulses();requestAnimationFrame(loop2);}
-        loop2();
+      var bwe=document.getElementById('bw');
+      var bgc=document.getElementById('bgc'),nc=document.getElementById('nc'),pc=document.getElementById('pc');
+      [bgc,nc,pc].forEach(function(c){c.width=bwe.offsetWidth||680;c.height=bwe.offsetHeight||580;});
+      var W=bgc.width,H=bgc.height,CX=W/2,CY=H/2-10;
+      var bg=bgc.getContext('2d'),nx=nc.getContext('2d'),px=pc.getContext('2d');
+      var N=80,nodes=[];
+      for(var i=0;i<N;i++){var th=Math.random()*Math.PI*2,ph=Math.acos(2*Math.random()-1),r=60+Math.random()*130;nodes.push({ox:Math.sin(ph)*Math.cos(th)*r,oy:Math.sin(ph)*Math.sin(th)*r*.45,oz:Math.cos(ph)*r,x:0,y:0,z:0,sc:1,r:Math.random()*2.5+.8,c:['255,133,0','255,171,64','29,158,117','192,132,252'][Math.floor(Math.random()*4)],pp:Math.random()*Math.PI*2,conn:[]});}
+      nodes.forEach(function(n,i){var ds=nodes.map(function(m,j){return{j:j,d:Math.hypot(n.ox-m.ox,n.oy-m.oy,n.oz-m.oz)};}).sort(function(a,b){return a.d-b.d;});n.conn=ds.slice(1,4).map(function(d){return d.j;});});
+      var PULSES=[];
+      setInterval(function(){var f=Math.floor(Math.random()*N),t=nodes[f].conn[Math.floor(Math.random()*nodes[f].conn.length)];if(t!==undefined)PULSES.push({f:f,t:t,p:0,sp:.02+Math.random()*.02,c:nodes[f].c});},100);
+      var rot=0;
+      function proj(ox,oy,oz){var x=ox*Math.cos(rot)-oz*Math.sin(rot),z=ox*Math.sin(rot)+oz*Math.cos(rot),fov=320,s=fov/(fov+z+200);return{sx:CX+x*s,sy:CY+oy*s,z:z,s:s};}
+      function drawBg(){bg.clearRect(0,0,W,H);var r=bg.createRadialGradient(CX,CY,0,CX,CY,W*.7);r.addColorStop(0,'rgba(14,20,45,1)');r.addColorStop(.5,'rgba(8,12,28,1)');r.addColorStop(1,'rgba(10,15,30,1)');bg.fillStyle=r;bg.fillRect(0,0,W,H);for(var i=1;i<=4;i++){bg.beginPath();bg.ellipse(CX,CY,i*60,i*35,0,0,Math.PI*2);bg.strokeStyle='rgba(255,133,0,'+(0.04-i*.008)+')';bg.lineWidth=1;bg.stroke();}}
+      var tt=0;
+      function drawNet(){nx.clearRect(0,0,W,H);nodes.forEach(function(n){var p=proj(n.ox,n.oy,n.oz);n.x=p.sx;n.y=p.sy;n.z=p.z;n.sc=p.s;});var sorted=nodes.slice().sort(function(a,b){return a.z-b.z;});sorted.forEach(function(n){n.conn.forEach(function(ci){var m=nodes[ci],al=Math.max(0,(1-((n.z+m.z)/2+200)/400)*.12);nx.beginPath();nx.moveTo(n.x,n.y);nx.lineTo(m.x,m.y);nx.strokeStyle='rgba(255,133,0,'+al+')';nx.lineWidth=.5;nx.stroke();});});sorted.forEach(function(n){var pls=Math.sin(tt*2+n.pp)*.4+.6,r2=n.r*n.sc*1.5;nx.beginPath();nx.arc(n.x,n.y,r2*2.5,0,Math.PI*2);nx.fillStyle='rgba('+n.c+',.06)';nx.fill();nx.beginPath();nx.arc(n.x,n.y,r2,0,Math.PI*2);nx.fillStyle='rgba('+n.c+','+(0.5*pls)+')';nx.shadowColor='rgba('+n.c+',.8)';nx.shadowBlur=8*n.sc;nx.fill();nx.shadowBlur=0;});}
+      function drawPulses(){px.clearRect(0,0,W,H);for(var i=PULSES.length-1;i>=0;i--){var p=PULSES[i];p.p+=p.sp;if(p.p>1){PULSES.splice(i,1);continue;}var fn=nodes[p.f],tn=nodes[p.t],x=fn.x+(tn.x-fn.x)*p.p,y=fn.y+(tn.y-fn.y)*p.p,al=(1-Math.abs(p.p-.5)*2)*.9;px.beginPath();px.arc(x,y,3,0,Math.PI*2);px.fillStyle='rgba('+p.c+','+al+')';px.shadowColor='rgba('+p.c+',1)';px.shadowBlur=12;px.fill();px.shadowBlur=0;}}
+      var fi=0,fe=document.getElementById('feed'),fitems=['Contrat analysé · 0.8s','Rapport généré · 1.2s','CV extrait · 0.6s','Email envoyé · 0.3s','PDF exporté · 0.4s','Risques détectés · 1.1s'];
+      function uf(){var ls=fe.innerHTML.split('<br>').filter(Boolean);if(ls.length>5)ls.shift();ls.push('<span style="color:rgba(255,133,0,.6)">›</span> '+fitems[fi%fitems.length]);fe.innerHTML=ls.join('<br>');fi++;}
+      setInterval(uf,1200);uf();
+      function bloop(){tt+=.008;rot+=.004;drawBg();drawNet();drawPulses();requestAnimationFrame(bloop);}bloop();
       })();
       </script>
 
@@ -343,104 +231,49 @@
         <h2>Opérationnel en <span class="gradient-text">3 étapes</span></h2>
       </div>
       <div id="ct" style="border-radius:1rem;overflow:hidden">
-        <canvas id="cv" style="position:absolute;inset:0"></canvas>
-        <div style="position:relative;z-index:10">
-          <div class="pb-wrap">
-            <div class="pb-lbl" id="tr-lbl">INITIALISATION</div>
-            <div class="pb-track"><div class="pb-fill" id="tr-fill"></div></div>
-          </div>
-          <div class="tr-ci tl">ARCHIVA · MOTEUR IA<br>Intelligence documentaire</div>
-          <div class="tr-ci tr">FR · RGPD CONFORME<br>CHIFFRÉ AES-256</div>
-          <div class="tr-st">
-            <div class="tr-st-main" id="tr-sm">Préparation du document</div>
-            <div class="tr-st-sub" id="tr-ss">En attente d'analyse…</div>
-          </div>
-          <div class="tr-outs">
-            <div class="tr-oc" id="tr-o1" style="background:rgba(255,133,0,.1);border-color:rgba(255,133,0,.4);color:#ff8500"><span>📋</span>Résumé</div>
-            <div class="tr-oc" id="tr-o2" style="background:rgba(255,107,107,.1);border-color:rgba(255,107,107,.4);color:#ff6b6b"><span>⚠️</span>Risques</div>
-            <div class="tr-oc" id="tr-o3" style="background:rgba(74,222,128,.1);border-color:rgba(74,222,128,.4);color:#4ade80"><span>📊</span>Données</div>
-            <div class="tr-oc" id="tr-o4" style="background:rgba(192,132,252,.1);border-color:rgba(192,132,252,.4);color:#c084fc"><span>✅</span>Actions</div>
-            <div class="tr-oc" id="tr-o5" style="background:rgba(251,191,36,.1);border-color:rgba(251,191,36,.4);color:#fbbf24"><span>📧</span>Email</div>
+        <canvas id="b3"></canvas><canvas id="p3"></canvas><canvas id="d3"></canvas><canvas id="sk3"></canvas>
+        <div class="ui">
+          <div class="pb"><div class="pbl" id="lbl">INITIALISATION</div><div class="pbt"><div class="pbf" id="fill"></div></div></div>
+          <div class="ci tl">ARCHIVA · MOTEUR IA<br>Intelligence documentaire</div>
+          <div class="ci tr">FR · RGPD CONFORME<br>CHIFFRÉ AES-256</div>
+          <div class="st"><div class="stm" id="sm">Préparation du document</div><div class="sts" id="ss">En attente d'analyse…</div></div>
+          <div class="outs">
+            <div class="oc" id="o1" style="background:rgba(255,133,0,.1);border-color:rgba(255,133,0,.4);color:#ff8500"><span>📋</span>Résumé</div>
+            <div class="oc" id="o2" style="background:rgba(255,107,107,.1);border-color:rgba(255,107,107,.4);color:#ff6b6b"><span>⚠️</span>Risques</div>
+            <div class="oc" id="o3" style="background:rgba(74,222,128,.1);border-color:rgba(74,222,128,.4);color:#4ade80"><span>📊</span>Données</div>
+            <div class="oc" id="o4" style="background:rgba(192,132,252,.1);border-color:rgba(192,132,252,.4);color:#c084fc"><span>✅</span>Actions</div>
+            <div class="oc" id="o5" style="background:rgba(251,191,36,.1);border-color:rgba(251,191,36,.4);color:#fbbf24"><span>📧</span>Email</div>
           </div>
         </div>
       </div>
       <script>
       (function(){
-        var el=document.getElementById('ct');
-        var cv=document.getElementById('cv');
-        cv.width=el.offsetWidth||680;cv.height=el.offsetHeight||520;
-        var W=cv.width,H=cv.height,CX=W/2,CY=H/2-15;
-        var ctx=cv.getContext('2d');
-        var PHASES=[
-          {p:0,  label:'Réception du document',   sub:'Contrat_Dupont_2025.pdf · 2.4 MB'},
-          {p:14, label:'Scan cryptographique',     sub:'SHA-256 · Vérification intégrité…'},
-          {p:28, label:'Ouverture du portail IA',  sub:'Connexion au moteur documentaire…'},
-          {p:50, label:'Analyse sémantique',       sub:'Extraction de 847 tokens…'},
-          {p:70, label:'Détection des clauses',    sub:'3 risques · 12 actions identifiés'},
-          {p:88, label:'Génération des livrables', sub:'Résumé · Risques · Données · Actions'},
-          {p:100,label:'Traitement terminé ✓',     sub:'Temps total : 1.8s · Précision 98.4%'},
-        ];
-        var sparks=[];
-        function spark(x,y,n,cols){for(var i=0;i<n;i++){var a=Math.random()*Math.PI*2,sp=Math.random()*5+1;sparks.push({x:x,y:y,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp,life:1,r:Math.random()*3+1,c:cols[Math.floor(Math.random()*cols.length)]});}}
-        var frame=0,pi=0,pf=0;
-        var docY=90,docA=1,docS=1,docG=0;
-        var porR=0,porT=0,porG=0;
-        var sw=null,shown=false;
-        var PH_DUR=[80,60,100,120,80,100,60];
-        function setPhaseUI(i){
-          var ph=PHASES[Math.min(i,PHASES.length-1)];
-          document.getElementById('tr-fill').style.width=ph.p+'%';
-          document.getElementById('tr-lbl').textContent=ph.label.toUpperCase();
-          document.getElementById('tr-sm').textContent=ph.label;
-          document.getElementById('tr-ss').textContent=ph.sub;
-        }
-        function drawBg3(){
-          var r=ctx.createRadialGradient(CX,CY,0,CX,CY,W*.7);
-          r.addColorStop(0,'rgba(14,6,0,1)');r.addColorStop(.6,'rgba(6,2,0,1)');r.addColorStop(1,'rgba(0,0,0,1)');
-          ctx.fillStyle=r;ctx.fillRect(0,0,W,H);
-          if(porR>5){var g2=ctx.createRadialGradient(CX,CY,porR*.2,CX,CY,porR*2.2);g2.addColorStop(0,'rgba(255,133,0,0)');g2.addColorStop(.6,'rgba(255,133,0,'+(0.025*porG)+')');g2.addColorStop(1,'rgba(0,0,0,0)');ctx.fillStyle=g2;ctx.fillRect(0,0,W,H);}
-        }
-        function drawPortal(t){
-          if(porR<4)return;
-          var rings=[{r:porR,c:'255,133,0',w:2,a:.85},{r:porR*.82,c:'255,171,64',w:1,a:.5},{r:porR*.62,c:'220,80,0',w:1,a:.3}];
-          rings.forEach(function(rg){ctx.beginPath();ctx.ellipse(CX,CY,rg.r,rg.r*.38,0,0,Math.PI*2);ctx.strokeStyle='rgba('+rg.c+','+(rg.a*porG)+')';ctx.lineWidth=rg.w;ctx.shadowColor='rgba('+rg.c+',.8)';ctx.shadowBlur=22*porG;ctx.stroke();ctx.shadowBlur=0;});
-          for(var i=0;i<26;i++){var a=(i/26)*Math.PI*2+t*1.6,a2=a+.14;ctx.beginPath();ctx.moveTo(CX+Math.cos(a)*porR,CY+Math.sin(a)*porR*.38);ctx.lineTo(CX+Math.cos(a2)*porR,CY+Math.sin(a2)*porR*.38);ctx.strokeStyle='rgba(255,133,0,'+((.4+Math.sin(t*3+i*.5)*.35)*porG*.85)+')';ctx.lineWidth=2;ctx.stroke();}
-          for(var j=0;j<14;j++){var b=(j/14)*Math.PI*2+t;var bx=CX+Math.cos(b)*porR*.48,by=CY+Math.sin(b)*porR*.48*.38;ctx.beginPath();ctx.arc(bx,by,2.5,0,Math.PI*2);ctx.fillStyle='rgba(255,180,60,'+(porG*(.5+Math.sin(t*4+j)*.3))+')';ctx.shadowColor='rgba(255,160,40,.8)';ctx.shadowBlur=10;ctx.fill();ctx.shadowBlur=0;}
-          if(sw){sw.r+=9;sw.a-=.032;if(sw.a<=0){sw=null;}else{ctx.beginPath();ctx.ellipse(CX,CY,sw.r,sw.r*.38,0,0,Math.PI*2);ctx.strokeStyle='rgba(255,133,0,'+sw.a+')';ctx.lineWidth=2.5;ctx.stroke();}}
-        }
-        function rrect(x,y,w,h,r){ctx.beginPath();ctx.moveTo(x+r,y);ctx.lineTo(x+w-r,y);ctx.quadraticCurveTo(x+w,y,x+w,y+r);ctx.lineTo(x+w,y+h-r);ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);ctx.lineTo(x+r,y+h);ctx.quadraticCurveTo(x,y+h,x,y+r);ctx.lineTo(x,y+r);ctx.quadraticCurveTo(x,y,x+r,y);ctx.closePath();}
-        function drawDoc(){
-          if(docA<=0.02)return;
-          var dw=72*docS,dh=90*docS;
-          ctx.save();ctx.globalAlpha=docA;ctx.translate(CX,docY);
-          for(var i=2;i>=0;i--){ctx.fillStyle='rgba(255,133,0,'+(0.06*(3-i))+')';rrect(-dw/2-i*5,-dh/2-i*3,dw,dh,7*docS);ctx.fill();}
-          ctx.shadowColor='rgba(255,133,0,'+(0.5+docG*.5)+')';ctx.shadowBlur=18+docG*38;
-          rrect(-dw/2,-dh/2,dw,dh,7*docS);ctx.fillStyle='rgba(255,133,0,.12)';ctx.fill();
-          ctx.strokeStyle='rgba(255,133,0,'+(0.75+docG*.25)+')';ctx.lineWidth=1.4*docS;ctx.stroke();ctx.shadowBlur=0;
-          ctx.font=(22*docS)+'px serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillStyle='rgba(255,180,80,'+docA+')';ctx.fillText('📄',0,-9*docS);
-          ctx.font=(9*docS)+'px sans-serif';ctx.fillStyle='rgba(255,255,255,.65)';ctx.fillText('Contrat_Dupont_2025.pdf',0,13*docS);
-          ctx.restore();
-        }
-        function drawSparks(){
-          for(var i=sparks.length-1;i>=0;i--){var s=sparks[i];s.x+=s.vx;s.y+=s.vy;s.vy+=.09;s.vx*=.97;s.life-=.02;if(s.life<=0){sparks.splice(i,1);continue;}ctx.beginPath();ctx.arc(s.x,s.y,s.r*s.life,0,Math.PI*2);ctx.fillStyle=s.c;ctx.globalAlpha=s.life;ctx.fill();ctx.globalAlpha=1;}
-        }
-        var t3=0;
-        function loop3(){
-          t3+=.016;frame++;
-          porR+=(porT-porR)*.07;
-          ctx.clearRect(0,0,W,H);drawBg3();drawPortal(t3);drawDoc();drawSparks();
-          pf++;if(pf>=(PH_DUR[Math.min(pi,PH_DUR.length-1)]||80)){pf=0;if(pi<PHASES.length-1)pi++;}
-          setPhaseUI(pi);
-          if(pi===0){docY=90+Math.sin(t3*1.5)*3;docS=1;docG=0;}
-          else if(pi===1){docG=Math.sin(t3*6)*.5+.5;if(Math.random()<.3)spark(CX,docY,1,['rgba(255,133,0,.9)','rgba(255,255,255,.7)']);}
-          else if(pi===2){porT=Math.min(porT+2.5,115);porG=Math.min(1,porG+.035);if(pf===28)sw={r:18,a:.85};}
-          else if(pi===3){if(docY<CY-28)docY+=.6;if(Math.random()<.5)spark(CX,docY,2,['rgba(255,133,0,.8)','rgba(255,171,64,.7)','rgba(255,255,255,.5)']);}
-          else if(pi===4){docS=Math.max(.28,docS-.01);docA=Math.max(0,docA-.01);spark(CX,CY-18,3,['rgba(255,133,0,.8)','rgba(255,171,64,.8)','rgba(74,222,128,.7)','rgba(192,132,252,.7)']);}
-          else if(pi===5){porG=Math.max(0,porG-.025);if(!shown){shown=true;['tr-o1','tr-o2','tr-o3','tr-o4','tr-o5'].forEach(function(id,idx){setTimeout(function(){document.getElementById(id).classList.add('on');},idx*220);});}}
-          else if(pi===6){porT=Math.max(0,porT-4);if(pf>50){pi=0;pf=0;docY=90;docA=1;docS=1;docG=0;porR=0;porT=0;porG=0;shown=false;['tr-o1','tr-o2','tr-o3','tr-o4','tr-o5'].forEach(function(id){document.getElementById(id).classList.remove('on');});}}
-          requestAnimationFrame(loop3);
-        }
-        loop3();
+      var el=document.getElementById('ct');
+      var b3=document.getElementById('b3'),p3=document.getElementById('p3'),d3=document.getElementById('d3'),s3=document.getElementById('sk3');
+      [b3,p3,d3,s3].forEach(function(c){c.width=el.offsetWidth||680;c.height=el.offsetHeight||560;});
+      var W=b3.width,H=b3.height,CX=W/2,CY=H/2-15;
+      var bg=b3.getContext('2d'),px=p3.getContext('2d'),dx=d3.getContext('2d'),sx=s3.getContext('2d');
+      var sparks=[];
+      function spark(x,y,n,cols){for(var i=0;i<n;i++){var a=Math.random()*Math.PI*2,sp=Math.random()*5+1;sparks.push({x:x,y:y,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp,life:1,r:Math.random()*3+1,c:cols[Math.floor(Math.random()*cols.length)]});}}
+      var PHASES=[
+        {p:0,  l:'Réception du document',     s:'Contrat_Dupont_2025.pdf · 2.4 MB'},
+        {p:14, l:'Scan cryptographique',       s:'SHA-256 · Vérification intégrité…'},
+        {p:28, l:'Ouverture du portail IA',    s:'Connexion au moteur documentaire…'},
+        {p:50, l:'Analyse sémantique',         s:'Extraction de 847 tokens…'},
+        {p:70, l:'Détection des clauses',      s:'3 risques · 12 actions identifiés'},
+        {p:88, l:'Génération des livrables',   s:'Résumé · Risques · Données · Actions'},
+        {p:100,l:'Traitement terminé ✓',       s:'Temps total : 1.8s · Précision 98.4%'},
+      ];
+      var PD=[80,60,100,120,80,100,60];
+      var fr=0,pi=0,pf=0,docY=90,docA=1,docS=1,docG=0,porR=0,porT=0,porG=0,sw=null,shown=false,t=0;
+      function setUI(i){var ph=PHASES[Math.min(i,PHASES.length-1)];document.getElementById('fill').style.width=ph.p+'%';document.getElementById('lbl').textContent=ph.l.toUpperCase();document.getElementById('sm').textContent=ph.l;document.getElementById('ss').textContent=ph.s;}
+      function drawBg(){bg.clearRect(0,0,W,H);var r=bg.createRadialGradient(CX,CY,0,CX,CY,W*.7);r.addColorStop(0,'rgba(16,22,48,1)');r.addColorStop(.5,'rgba(10,15,32,1)');r.addColorStop(1,'rgba(10,15,30,1)');bg.fillStyle=r;bg.fillRect(0,0,W,H);if(porR>5){var g2=bg.createRadialGradient(CX,CY,porR*.2,CX,CY,porR*2.2);g2.addColorStop(0,'rgba(255,133,0,0)');g2.addColorStop(.6,'rgba(255,133,0,'+(0.022*porG)+')');g2.addColorStop(1,'rgba(0,0,0,0)');bg.fillStyle=g2;bg.fillRect(0,0,W,H);}}
+      function drawPortal(){if(porR<4)return;[{r:porR,c:'255,133,0',w:2,a:.85},{r:porR*.82,c:'255,171,64',w:1,a:.5},{r:porR*.62,c:'220,80,0',w:1,a:.3}].forEach(function(rg){px.beginPath();px.ellipse(CX,CY,rg.r,rg.r*.38,0,0,Math.PI*2);px.strokeStyle='rgba('+rg.c+','+(rg.a*porG)+')';px.lineWidth=rg.w;px.shadowColor='rgba('+rg.c+',.8)';px.shadowBlur=22*porG;px.stroke();px.shadowBlur=0;});for(var i=0;i<26;i++){var a=(i/26)*Math.PI*2+t*1.6,a2=a+.14;px.beginPath();px.moveTo(CX+Math.cos(a)*porR,CY+Math.sin(a)*porR*.38);px.lineTo(CX+Math.cos(a2)*porR,CY+Math.sin(a2)*porR*.38);px.strokeStyle='rgba(255,133,0,'+((.4+Math.sin(t*3+i*.5)*.35)*porG*.85)+')';px.lineWidth=2;px.stroke();}for(var j=0;j<14;j++){var b=(j/14)*Math.PI*2+t,bx=CX+Math.cos(b)*porR*.48,by=CY+Math.sin(b)*porR*.48*.38;px.beginPath();px.arc(bx,by,2.5,0,Math.PI*2);px.fillStyle='rgba(255,180,60,'+(porG*(.5+Math.sin(t*4+j)*.3))+')';px.shadowColor='rgba(255,160,40,.8)';px.shadowBlur=10;px.fill();px.shadowBlur=0;}if(sw){sw.r+=9;sw.a-=.032;if(sw.a<=0){sw=null;}else{px.beginPath();px.ellipse(CX,CY,sw.r,sw.r*.38,0,0,Math.PI*2);px.strokeStyle='rgba(255,133,0,'+sw.a+')';px.lineWidth=2.5;px.stroke();}}}
+      function rr(x,y,w,h,r){dx.beginPath();dx.moveTo(x+r,y);dx.lineTo(x+w-r,y);dx.quadraticCurveTo(x+w,y,x+w,y+r);dx.lineTo(x+w,y+h-r);dx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);dx.lineTo(x+r,y+h);dx.quadraticCurveTo(x,y+h,x,y+r);dx.lineTo(x,y+r);dx.quadraticCurveTo(x,y,x+r,y);dx.closePath();}
+      function drawDoc(){if(docA<=.02)return;var dw=72*docS,dh=90*docS;dx.save();dx.globalAlpha=docA;dx.translate(CX,docY);for(var i=2;i>=0;i--){dx.fillStyle='rgba(255,133,0,'+(0.06*(3-i))+')';rr(-dw/2-i*5,-dh/2-i*3,dw,dh,7*docS);dx.fill();}dx.shadowColor='rgba(255,133,0,'+(0.5+docG*.5)+')';dx.shadowBlur=18+docG*38;rr(-dw/2,-dh/2,dw,dh,7*docS);dx.fillStyle='rgba(255,133,0,.12)';dx.fill();dx.strokeStyle='rgba(255,133,0,'+(0.75+docG*.25)+')';dx.lineWidth=1.4*docS;dx.stroke();dx.shadowBlur=0;dx.font=(22*docS)+'px serif';dx.textAlign='center';dx.textBaseline='middle';dx.fillStyle='rgba(255,180,80,'+docA+')';dx.fillText('📄',0,-9*docS);dx.font=(9*docS)+'px sans-serif';dx.fillStyle='rgba(255,255,255,.65)';dx.fillText('Contrat_Dupont_2025.pdf',0,13*docS);dx.restore();}
+      function drawSparks(){sx.clearRect(0,0,W,H);for(var i=sparks.length-1;i>=0;i--){var s=sparks[i];s.x+=s.vx;s.y+=s.vy;s.vy+=.09;s.vx*=.97;s.life-=.02;if(s.life<=0){sparks.splice(i,1);continue;}sx.beginPath();sx.arc(s.x,s.y,s.r*s.life,0,Math.PI*2);sx.fillStyle=s.c;sx.globalAlpha=s.life;sx.fill();sx.globalAlpha=1;}}
+      function tloop(){t+=.016;fr++;porR+=(porT-porR)*.07;px.clearRect(0,0,W,H);dx.clearRect(0,0,W,H);drawBg();drawPortal();drawDoc();drawSparks();pf++;if(pf>=(PD[Math.min(pi,PD.length-1)]||80)){pf=0;if(pi<PHASES.length-1)pi++;}setUI(pi);if(pi===0){docY=90+Math.sin(t*1.5)*3;docS=1;docG=0;}else if(pi===1){docG=Math.sin(t*6)*.5+.5;if(Math.random()<.3)spark(CX,docY,1,['rgba(255,133,0,.9)','rgba(255,255,255,.7))']);}else if(pi===2){porT=Math.min(porT+2.5,115);porG=Math.min(1,porG+.035);if(pf===28)sw={r:18,a:.85};}else if(pi===3){if(docY<CY-28)docY+=.6;if(Math.random()<.5)spark(CX,docY,2,['rgba(255,133,0,.8)','rgba(255,171,64,.7)','rgba(255,255,255,.5))']);}else if(pi===4){docS=Math.max(.28,docS-.01);docA=Math.max(0,docA-.01);spark(CX,CY-18,3,['rgba(255,133,0,.8)','rgba(255,171,64,.8)','rgba(74,222,128,.7)','rgba(192,132,252,.7))']);}else if(pi===5){porG=Math.max(0,porG-.025);if(!shown){shown=true;['o1','o2','o3','o4','o5'].forEach(function(id,idx){setTimeout(function(){document.getElementById(id).classList.add('on');},idx*220);});}}else if(pi===6){porT=Math.max(0,porT-4);}requestAnimationFrame(tloop);}
+      tloop();
       })();
       </script>
     </div>
@@ -463,49 +296,39 @@
 
   <section class="section" style="padding:0;overflow:hidden">
     <div id="vault">
-      <canvas id="vault-canvas"></canvas>
-      <div style="position:relative;z-index:5;text-align:center">
-        <div class="vault-title">SÉCURITÉ RGPD</div>
-        <div class="vault-sub">Données chiffrées · Hébergées en France</div>
-      </div>
-      <div class="badges-orbit" id="badges"></div>
+      <canvas id="vc"></canvas>
+      <div class="vt">SÉCURITÉ RGPD</div>
+      <div class="vs">Données chiffrées · Hébergées en France</div>
+      <div class="bo" id="vbadges"></div>
     </div>
     <script>
     (function(){
-      var vc=document.getElementById('vault-canvas');
-      var vx=vc.getContext('2d');
-      var ve=document.getElementById('vault');
-      vc.width=ve.clientWidth;vc.height=ve.clientHeight;
-      var cx=vc.width/2,cy=vc.height/2;
-      var bdgs=['🇫🇷 Hébergé en France','🔒 Chiffrement AES-256','✅ RGPD conforme','🛡️ ISO 27001','📋 DPA disponible','🔐 Zéro export'];
-      var badgeEls=bdgs.map(function(b,i){
-        var el=document.createElement('div');el.className='badge-orb';el.textContent=b;
-        document.getElementById('badges').appendChild(el);
-        return{el:el,phase:i/bdgs.length*Math.PI*2,r:155+Math.random()*15};
-      });
-      var matrix=[];
-      for(var i=0;i<45;i++)matrix.push({x:Math.random()*vc.width,y:Math.random()*vc.height,speed:.4+Math.random()*.6,delay:Math.random()*80});
-      var t=0;
-      function draw(){
-        vx.clearRect(0,0,vc.width,vc.height);t+=.008;
-        matrix.forEach(function(m){
-          if(m.delay-->0)return;
-          m.y+=m.speed;if(m.y>vc.height)m.y=0;
-          vx.fillStyle='rgba(80,30,0,'+(Math.random()*.25+.04)+')';
-          vx.font='10px monospace';vx.fillText('01RGPD'[Math.floor(Math.random()*6)],m.x,m.y);
-        });
-        var pulse=Math.sin(t*2)*.2+.8;
-        for(var r=4;r>=1;r--){vx.beginPath();vx.arc(cx,cy,80+r*8,0,Math.PI*2);vx.strokeStyle='rgba(255,133,0,'+(0.05*r*pulse)+')';vx.lineWidth=8;vx.stroke();}
-        vx.beginPath();vx.arc(cx,cy,80,0,Math.PI*2);vx.strokeStyle='rgba(255,133,0,'+(0.8*pulse)+')';vx.lineWidth=1.5;vx.shadowColor='#ff8500';vx.shadowBlur=22;vx.stroke();vx.shadowBlur=0;
-        vx.save();vx.translate(cx,cy);vx.rotate(t*.4);
-        [[50,60],[35,42]].forEach(function(wh){vx.strokeStyle='rgba(255,133,0,.5)';vx.lineWidth=1;vx.beginPath();vx.roundRect(-wh[0]/2,-wh[1]/2,wh[0],wh[1],4);vx.stroke();});
-        vx.restore();
-        vx.fillStyle='rgba(255,133,0,.9)';vx.font='28px serif';vx.textAlign='center';vx.textBaseline='middle';vx.fillText('🔒',cx,cy);
-        for(var i=0;i<20;i++){var a=(i/20)*Math.PI*2+t*.3;var bx=cx+Math.cos(a)*92,by=cy+Math.sin(a)*92;vx.beginPath();vx.arc(bx,by,1.5,0,Math.PI*2);vx.fillStyle='rgba(255,171,64,'+(Math.sin(t*3+i*.5)*.4+.4)+')';vx.fill();}
-        badgeEls.forEach(function(b){var a=t*.3+b.phase;b.el.style.left=(cx+Math.cos(a)*b.r-60)+'px';b.el.style.top=(cy+Math.sin(a)*b.r*.55-12)+'px';});
-        requestAnimationFrame(draw);
-      }
-      draw();
+    var vc=document.getElementById('vc'),vx=vc.getContext('2d'),ve=document.getElementById('vault');
+    vc.width=ve.offsetWidth||680;vc.height=ve.offsetHeight||460;
+    var cx=vc.width/2,cy=vc.height/2;
+    var bdgs=['🇫🇷 Hébergé en France','🔒 Chiffrement AES-256','✅ RGPD conforme','🛡️ ISO 27001','📋 DPA disponible','🔐 Zéro export'];
+    var bels=bdgs.map(function(b,i){var el=document.createElement('div');el.textContent=b;document.getElementById('vbadges').appendChild(el);return{el:el,phase:i/bdgs.length*Math.PI*2,r:155+Math.random()*15};});
+    var matrix=[];for(var i=0;i<45;i++)matrix.push({x:Math.random()*vc.width,y:Math.random()*vc.height,spd:.4+Math.random()*.6,delay:Math.random()*80});
+    var t=0;
+    function draw(){
+      vx.clearRect(0,0,vc.width,vc.height);
+      var r=vx.createRadialGradient(cx,cy,0,cx,cy,Math.max(vc.width,vc.height)*.6);
+      r.addColorStop(0,'rgba(14,20,45,.8)');r.addColorStop(1,'rgba(10,15,30,0)');
+      vx.fillStyle=r;vx.fillRect(0,0,vc.width,vc.height);
+      t+=.008;
+      matrix.forEach(function(m){if(m.delay-->0)return;m.y+=m.spd;if(m.y>vc.height)m.y=0;vx.fillStyle='rgba(80,40,0,'+(Math.random()*.2+.04)+')';vx.font='10px monospace';vx.fillText('01RGPD'[Math.floor(Math.random()*6)],m.x,m.y);});
+      var pulse=Math.sin(t*2)*.2+.8;
+      for(var ri=4;ri>=1;ri--){vx.beginPath();vx.arc(cx,cy,80+ri*8,0,Math.PI*2);vx.strokeStyle='rgba(255,133,0,'+(0.05*ri*pulse)+')';vx.lineWidth=8;vx.stroke();}
+      vx.beginPath();vx.arc(cx,cy,80,0,Math.PI*2);vx.strokeStyle='rgba(255,133,0,'+(0.8*pulse)+')';vx.lineWidth=1.5;vx.shadowColor='#ff8500';vx.shadowBlur=22;vx.stroke();vx.shadowBlur=0;
+      vx.save();vx.translate(cx,cy);vx.rotate(t*.4);
+      [[50,60],[35,42]].forEach(function(wh){vx.strokeStyle='rgba(255,133,0,.5)';vx.lineWidth=1;vx.beginPath();vx.roundRect(-wh[0]/2,-wh[1]/2,wh[0],wh[1],4);vx.stroke();});
+      vx.restore();
+      vx.fillStyle='rgba(255,133,0,.9)';vx.font='28px serif';vx.textAlign='center';vx.textBaseline='middle';vx.fillText('🔒',cx,cy);
+      for(var j=0;j<20;j++){var a=(j/20)*Math.PI*2+t*.3,bx=cx+Math.cos(a)*92,by=cy+Math.sin(a)*92;vx.beginPath();vx.arc(bx,by,1.5,0,Math.PI*2);vx.fillStyle='rgba(255,171,64,'+(Math.sin(t*3+j*.5)*.4+.4)+')';vx.fill();}
+      bels.forEach(function(b){var a=t*.3+b.phase;b.el.style.left=(cx+Math.cos(a)*b.r-60)+'px';b.el.style.top=(cy+Math.sin(a)*b.r*.55-12)+'px';});
+      requestAnimationFrame(draw);
+    }
+    draw();
     })();
     </script>
   </section>
@@ -513,56 +336,37 @@
   <section class="section" style="background:var(--bg2)">
     <div class="container">
       <div class="sec-head"><div class="sec-label"><span class="dot"></span>Témoignages</div><h2>Ce que disent nos <span class="gradient-text">clients</span></h2></div>
-      <div id="testi-cine">
-        <canvas id="testi-canvas"></canvas>
-        <div class="testi-cine-card" id="testi-cine-card">
-          <div class="scan-line"></div>
-          <div class="tc-stars">★★★★★</div>
-          <div class="tc-quote" id="tc-quote"></div>
-          <div class="tc-author">
-            <div class="tc-avatar" id="tc-av"></div>
-            <div><div class="tc-name" id="tc-name"></div><div class="tc-role" id="tc-role"></div></div>
-          </div>
+      <div id="te">
+        <canvas id="tc"></canvas>
+        <div class="card">
+          <div class="sl"></div>
+          <div class="stars">★★★★★</div>
+          <div class="quote" id="tq"></div>
+          <div class="auth"><div class="av" id="tav"></div><div><div class="an" id="tn"></div><div class="ar" id="tr2"></div></div></div>
         </div>
-        <div style="display:flex;align-items:center;gap:16px;z-index:5">
-          <div class="testi-dots-cine" id="testi-dots-cine"></div>
-        </div>
-        <div class="testi-nav-cine">
-          <button class="tnav-btn" onclick="tcPrev()">←</button>
-          <button class="tnav-btn" onclick="tcNext()">→</button>
-        </div>
+        <div class="dots" id="tdots"></div>
+        <div class="tnav"><button class="nb" onclick="testiPrev()">←</button><button class="nb" onclick="testiNext()">→</button></div>
       </div>
       <script>
       (function(){
-        var testimonials=[
-          {quote:"Archiva a transformé notre façon de traiter les contrats. Ce qui prenait 2 heures ne prend plus que 3 minutes.",name:"Sophie Laurent",role:"DAF — Groupe Meridian",initials:"SL"},
-          {quote:"La connexion à Google Drive et l'analyse automatique de nos rapports mensuels nous fait gagner 15h par semaine.",name:"Thomas Mercier",role:"CTO — StartupFactory",initials:"TM"},
-          {quote:"En cabinet RH, Archiva résume et classe chaque CV en quelques secondes. Absolument indispensable.",name:"Amélie Chauvin",role:"DRH — HRConsult Paris",initials:"AC"},
-        ];
-        var cur=0;
-        var tc2=document.getElementById('testi-canvas'),tx=tc2.getContext('2d'),te=document.getElementById('testi-cine');
-        tc2.width=te.clientWidth;tc2.height=te.clientHeight;
-        var dotsEl=document.getElementById('testi-dots-cine');
-        testimonials.forEach(function(_,i){var d=document.createElement('div');d.className='tdot'+(i===0?' active':'');d.onclick=function(){tcShow(i)};dotsEl.appendChild(d);});
-        function tcShow(i){
-          cur=i;var t=testimonials[i];
-          document.getElementById('tc-quote').textContent='« '+t.quote+' »';
-          document.getElementById('tc-name').textContent=t.name;
-          document.getElementById('tc-role').textContent=t.role;
-          document.getElementById('tc-av').textContent=t.initials;
-          document.querySelectorAll('.tdot').forEach(function(d,j){d.classList.toggle('active',j===i);});
-        }
-        window.tcNext=function(){tcShow((cur+1)%testimonials.length)};
-        window.tcPrev=function(){tcShow((cur-1+testimonials.length)%testimonials.length)};
-        tcShow(0);setInterval(window.tcNext,5000);
-        var pts=Array.from({length:50},function(){return{x:Math.random()*tc2.width,y:Math.random()*tc2.height,vx:(Math.random()-.5)*.3,vy:(Math.random()-.5)*.3,r:Math.random()*1.5+.3,a:Math.random()*.25+.05}});
-        var at=0;
-        function drawBgT(){
-          tx.clearRect(0,0,tc2.width,tc2.height);at+=.005;
-          pts.forEach(function(p){p.x+=p.vx;p.y+=p.vy;if(p.x<0)p.x=tc2.width;if(p.x>tc2.width)p.x=0;if(p.y<0)p.y=tc2.height;if(p.y>tc2.height)p.y=0;tx.beginPath();tx.arc(p.x,p.y,p.r,0,Math.PI*2);tx.fillStyle='rgba(255,133,0,'+(p.a*(Math.sin(at*2+p.x)*.3+.7))+')';tx.fill();});
-          requestAnimationFrame(drawBgT);
-        }
-        drawBgT();
+      var T=[
+        {q:"Archiva a transformé notre façon de traiter les contrats. Ce qui prenait 2 heures ne prend plus que 3 minutes.",n:"Sophie Laurent",r:"DAF — Groupe Meridian",i:"SL"},
+        {q:"La connexion à Google Drive et l'analyse automatique de nos rapports mensuels nous fait gagner 15h par semaine.",n:"Thomas Mercier",r:"CTO — StartupFactory",i:"TM"},
+        {q:"En cabinet RH, Archiva résume et classe chaque CV en quelques secondes. Absolument indispensable.",n:"Amélie Chauvin",r:"DRH — HRConsult Paris",i:"AC"},
+      ];
+      var cur=0;
+      var tc=document.getElementById('tc'),tx=tc.getContext('2d'),te=document.getElementById('te');
+      tc.width=te.offsetWidth||680;tc.height=te.offsetHeight||400;
+      var de=document.getElementById('tdots');
+      T.forEach(function(_,i){var d=document.createElement('div');d.className='dot'+(i===0?' a':'');d.onclick=function(){tShow(i);};de.appendChild(d);});
+      function tShow(i){cur=i;var t=T[i];document.getElementById('tq').textContent='« '+t.q+' »';document.getElementById('tn').textContent=t.n;document.getElementById('tr2').textContent=t.r;document.getElementById('tav').textContent=t.i;document.querySelectorAll('#tdots .dot').forEach(function(d,j){d.classList.toggle('a',j===i);});}
+      window.testiNext=function(){tShow((cur+1)%T.length);};
+      window.testiPrev=function(){tShow((cur-1+T.length)%T.length);};
+      tShow(0);setInterval(window.testiNext,5000);
+      var pts=[];for(var i=0;i<50;i++)pts.push({x:Math.random()*tc.width,y:Math.random()*tc.height,vx:(Math.random()-.5)*.3,vy:(Math.random()-.5)*.3,r:Math.random()*1.5+.3,a:Math.random()*.2+.04});
+      var at=0;
+      function drawT(){tx.clearRect(0,0,tc.width,tc.height);at+=.005;pts.forEach(function(p){p.x+=p.vx;p.y+=p.vy;if(p.x<0)p.x=tc.width;if(p.x>tc.width)p.x=0;if(p.y<0)p.y=tc.height;if(p.y>tc.height)p.y=0;tx.beginPath();tx.arc(p.x,p.y,p.r,0,Math.PI*2);tx.fillStyle='rgba(255,133,0,'+(p.a*(Math.sin(at*2+p.x)*.3+.7))+')';tx.fill();});requestAnimationFrame(drawT);}
+      drawT();
       })();
       </script>
     </div>
