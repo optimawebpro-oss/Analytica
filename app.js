@@ -617,11 +617,9 @@ async function generateDoc() {
   showLoading('genOutput', ['Analyse de la demande', 'Structuration', 'Rédaction IA', 'Mise en forme']);
 
   const templateCtx = buildTemplateContext(instr);
-  const activeSig   = getActiveSignature();
-  const sigCtx      = activeSig ? `\n\nAjoute à la toute fin du document une section signature avec ces informations (ne modifie pas leur contenu) :\n${buildSignatureText(activeSig)}` : '';
   const prompt = `Tu es un expert en rédaction professionnelle. Génère un(e) ${type} en ${lang}.
 Contexte : ${company || 'Non précisé'} | Longueur : ${length}
-Instructions : ${instr || 'Document standard professionnel'}${templateCtx}${sigCtx}
+Instructions : ${instr || 'Document standard professionnel'}${templateCtx}
 Génère un document complet, structuré en Markdown (## H2, ### H3). Professionnel et complet.${templateCtx ? '\nRespecte strictement la structure et le style du/des modèle(s) de référence fourni(s).' : ''}`;
 
   try {
@@ -629,9 +627,11 @@ Génère un document complet, structuré en Markdown (## H2, ### H3). Profession
     const result = await callAI(prompt, 3000);
     advanceStep(3);
 
+    const activeSig = getActiveSignature();
+    const sigBlock  = activeSig ? renderSignatureBlock(activeSig) : '';
     document.getElementById('genOutput').innerHTML = `
       <div class="output-bar"><span class="output-lbl">📝 ${escHtml(type)}</span><div class="output-acts"><button class="btn btn-sm btn-ghost" onclick="copyOutput('genContent')">📋 Copier</button><button class="btn btn-sm btn-primary" onclick="exportPdf('genContent')">⬇️ PDF</button></div></div>
-      <div class="output-body" id="genContent">${markdownToHtml(result)}</div>`;
+      <div class="output-body" id="genContent">${markdownToHtml(result)}${sigBlock}</div>`;
     document.getElementById('genOutput').style.display = 'block';
 
     addToLibrary({ title: type + (company ? ' — ' + company : ''), content: result, module: 'gen' });
@@ -1385,6 +1385,25 @@ function buildSignatureText(sig) {
   if (sig.phone)   lines.push(sig.phone);
   if (sig.website) lines.push(sig.website);
   return lines.join('\n');
+}
+
+function renderSignatureBlock(sig) {
+  const initials = sig.name.split(' ').map(w => w[0]).join('').slice(0,2).toUpperCase();
+  return `
+<div style="margin-top:2.5rem;padding-top:1.5rem;border-top:2px solid rgba(249,115,22,.3)">
+  <div style="display:flex;align-items:center;gap:1rem">
+    <div style="width:48px;height:48px;border-radius:50%;background:linear-gradient(135deg,#f97316,#ea580c);display:flex;align-items:center;justify-content:center;font-size:1.1rem;font-weight:700;color:#fff;flex-shrink:0">${escHtml(initials)}</div>
+    <div>
+      <div style="font-size:1rem;font-weight:700;color:var(--t100)">${escHtml(sig.name)}${sig.title ? `<span style="font-weight:400;color:var(--t400);font-size:.875rem"> — ${escHtml(sig.title)}</span>` : ''}</div>
+      ${sig.company ? `<div style="font-size:.82rem;color:var(--orange);font-weight:600;margin-top:.1rem">${escHtml(sig.company)}</div>` : ''}
+      <div style="display:flex;flex-wrap:wrap;gap:.75rem;margin-top:.35rem">
+        ${sig.email   ? `<span style="font-size:.78rem;color:var(--t400)">✉ ${escHtml(sig.email)}</span>` : ''}
+        ${sig.phone   ? `<span style="font-size:.78rem;color:var(--t400)">📞 ${escHtml(sig.phone)}</span>` : ''}
+        ${sig.website ? `<span style="font-size:.78rem;color:var(--t400)">🌐 ${escHtml(sig.website)}</span>` : ''}
+      </div>
+    </div>
+  </div>
+</div>`;
 }
 
 function getActiveSignature() {
