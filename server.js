@@ -26,6 +26,8 @@ const PRODUCT_PLAN = {
   'prod_UToPyjLGc4P78s': { plan: 'pro',        period: 'annuel'  },
   'prod_UTl6uQBtZfbgwN': { plan: 'entreprise', period: 'mensuel' },
   'prod_UTl7nKtP1jGmaQ': { plan: 'entreprise', period: 'annuel'  },
+  'prod_UidtCz0y33grQr': { plan: 'max',        period: 'mensuel' },
+  'prod_UidulMoJXxiiqL': { plan: 'max',        period: 'annuel'  },
 };
 
 // ── KINDE AUTH MIDDLEWARE ──────────────────────────────────
@@ -120,7 +122,7 @@ app.get('/api/me', requireAuth, wrap(async (req, res) => {
 
 app.post('/api/user/plan', requireAuth, wrap(async (req, res) => {
   const { plan } = req.body;
-  const valid = ['gratuit', 'pro', 'entreprise', 'sur-devis'];
+  const valid = ['gratuit', 'pro', 'entreprise', 'max'];
   if (!valid.includes(plan)) return res.status(400).json({ error: 'Plan invalide.' });
   const existing = userPlans.get(req.userId) || {};
   userPlans.set(req.userId, { ...existing, plan });

@@ -497,7 +497,7 @@ function setPricingPeriod(period) {
   const proM  = 57, entM = 147, maxM = 457;
   const proA  = Math.round(proM  * 0.85);
   const entA  = Math.round(entM  * 0.85);
-  const maxA  = Math.round(maxM  * 0.85);
+  const maxA  = Math.round(maxM  * 0.80);
 
   if (state.pricingAnnual) {
     document.getElementById('priceProAmount').textContent = proA + '€';
@@ -974,12 +974,14 @@ const STRIPE_PRODUCTS = {
   'pro-annuel':         'prod_UToPyjLGc4P78s',
   'entreprise-mensuel': 'prod_UTl6uQBtZfbgwN',
   'entreprise-annuel':  'prod_UTl7nKtP1jGmaQ',
+  'max-mensuel':        'prod_UidtCz0y33grQr',
+  'max-annuel':         'prod_UidulMoJXxiiqL',
 };
 
 const PLAN_LABELS = {
   'pro':        { name: 'Pro',        mensuel: '57€/mois',  annuel: '48€/mois' },
   'entreprise': { name: 'Entreprise', mensuel: '147€/mois', annuel: '125€/mois' },
-  'max':        { name: 'Max',        mensuel: '457€/mois', annuel: '388€/mois' },
+  'max':        { name: 'Max',        mensuel: '457€/mois', annuel: '366€/mois' },
 };
 
 let currentPurchasePlanKey = '';
