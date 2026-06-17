@@ -1089,28 +1089,28 @@
         <div class="price-per" id="priceEntPer">/mois par utilisateur</div>
         <p class="price-note" id="priceEntNote">Pour les grandes équipes</p>
         <ul class="price-list">
-          <li>Tout le plan Pro</li><li>Jusqu'à 50 utilisateurs</li>
-          <li>Dashboard admin</li><li>Audit trail complet</li>
-          <li>SLA 99.9%</li><li>Intégrations sur mesure</li>
+          <li>85 documents générés / mois</li><li>50 analyses / mois</li>
+          <li>50 extractions / mois</li><li>Dashboard admin</li>
+          <li>Audit trail complet</li><li>SLA 99.9%</li>
           <li>Formation &amp; onboarding</li><li>Support dédié 24/7</li>
         </ul>
         <button class="btn-price bp-ent" onclick="openPurchaseModal('entreprise')">Choisir Entreprise</button>
       </div>
 
-      <!-- SUR DEVIS -->
+      <!-- MAX -->
       <div class="price-card custom">
-        <div class="price-badge badge-custom">🏢 Sur mesure</div>
-        <span class="price-name">Sur devis</span>
-        <span class="price-amount gradient-text-indigo">∞</span>
-        <div class="price-per">selon vos besoins</div>
-        <p class="price-note">Grandes organisations</p>
+        <div class="price-badge badge-custom">🔥 Tout illimité</div>
+        <span class="price-name">Max</span>
+        <span class="price-amount gradient-text-indigo" id="priceMaxAmount">457€</span>
+        <div class="price-per" id="priceMaxPer">/mois</div>
+        <p class="price-note" id="priceMaxNote">Utilisation illimitée</p>
         <ul class="price-list">
-          <li>Utilisateurs illimités</li><li>Déploiement on-premise</li>
-          <li>API privée dédiée</li><li>Modèle IA personnalisé</li>
-          <li>Intégrations ERP / CRM</li><li>ISO 27001</li>
-          <li>DPO dédié RGPD</li><li>SLA contractuel</li>
+          <li>Tout illimité, sans restriction</li><li>Utilisateurs illimités</li>
+          <li>Déploiement on-premise</li><li>API privée dédiée</li>
+          <li>Modèle IA personnalisé</li><li>Intégrations ERP / CRM</li>
+          <li>DPO dédié RGPD</li><li>SLA contractuel + Account manager</li>
         </ul>
-        <button class="btn-price bp-custom" onclick="openPurchaseModal('Sur devis', 'Sur mesure')">Demander un devis</button>
+        <button class="btn-price bp-custom" onclick="openPurchaseModal('max')">Choisir Max</button>
       </div>
     </div>
 
@@ -1119,16 +1119,16 @@
       <h2>Comparaison <span class="gradient-text">détaillée</span></h2>
       <div class="comp-wrap">
         <table class="comp-table">
-          <thead><tr><th>Fonctionnalité</th><th>Gratuit</th><th class="col-pop">Pro</th><th>Entreprise</th><th class="col-custom">Sur devis</th></tr></thead>
+          <thead><tr><th>Fonctionnalité</th><th>Gratuit</th><th class="col-pop">Pro</th><th>Entreprise</th><th class="col-custom">Max</th></tr></thead>
           <tbody>
-            <tr><td>Documents générés / mois</td><td>5</td><td class="col-pop">10 / mois</td><td>Illimité</td><td class="col-custom">Illimité</td></tr>
+            <tr><td>Documents générés / mois</td><td>5</td><td class="col-pop">10 / mois</td><td>85 / mois</td><td class="col-custom">Illimité</td></tr>
             <tr><td>Bibliothèque IA partagée</td><td>10 docs</td><td class="col-pop">Illimité</td><td>Illimité</td><td class="col-custom">Illimité</td></tr>
             <tr><td>Recherche IA cross-modules</td><td>✓</td><td class="col-pop">✓</td><td>✓</td><td class="col-custom">✓</td></tr>
-            <tr><td>Extraction de fichiers</td><td>TXT, CSV</td><td class="col-pop">8 / mois</td><td>Illimité</td><td class="col-custom">Illimité</td></tr>
-            <tr><td>Rapports avec graphiques</td><td>1/rapport</td><td class="col-pop">8 / mois</td><td>Illimité</td><td class="col-custom">Illimité</td></tr>
-            <tr><td>Connexion email</td><td>✗</td><td class="col-pop">✓</td><td>✓</td><td class="col-custom">✓</td></tr>
-            <tr><td>Stockage cloud</td><td>✗</td><td class="col-pop">✓</td><td>✓</td><td class="col-custom">✓</td></tr>
-            <tr><td>Marque blanche (revendeur)</td><td>✗</td><td class="col-pop">✓</td><td>✓</td><td class="col-custom">✓</td></tr>
+            <tr><td>Extraction de fichiers</td><td>TXT, CSV</td><td class="col-pop">8 / mois</td><td>50 / mois</td><td class="col-custom">Illimité</td></tr>
+            <tr><td>Rapports avec graphiques</td><td>1/rapport</td><td class="col-pop">8 / mois</td><td>50 / mois</td><td class="col-custom">Illimité</td></tr>
+            <tr><td>Dashboard admin</td><td>✗</td><td class="col-pop">✗</td><td>✓</td><td class="col-custom">✓</td></tr>
+            <tr><td>Site personnalisé (white label)</td><td>✗</td><td class="col-pop">✗</td><td>✓</td><td class="col-custom">✓</td></tr>
+            <tr><td>API privée dédiée</td><td>✗</td><td class="col-pop">✗</td><td>✗</td><td class="col-custom">✓</td></tr>
             <tr><td>Export PDF</td><td>5/mois</td><td class="col-pop">Illimité</td><td>Illimité</td><td class="col-custom">Illimité</td></tr>
             <tr><td>Support</td><td>Communauté</td><td class="col-pop">Email</td><td>Dédié 24/7</td><td class="col-custom">Account manager</td></tr>
           </tbody>

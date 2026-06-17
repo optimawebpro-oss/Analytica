@@ -494,9 +494,10 @@ function setPricingPeriod(period) {
   document.getElementById('ptog-monthly').classList.toggle('active', !state.pricingAnnual);
   document.getElementById('ptog-annual').classList.toggle('active',  state.pricingAnnual);
 
-  const proM  = 57, entM = 147;
+  const proM  = 57, entM = 147, maxM = 457;
   const proA  = Math.round(proM  * 0.85);
   const entA  = Math.round(entM  * 0.85);
+  const maxA  = Math.round(maxM  * 0.85);
 
   if (state.pricingAnnual) {
     document.getElementById('priceProAmount').textContent = proA + '€';
@@ -505,6 +506,9 @@ function setPricingPeriod(period) {
     document.getElementById('priceEntAmount').textContent = entA + '€';
     document.getElementById('priceEntPer').textContent    = '/mois (facturé annuellement)';
     document.getElementById('priceEntNote').innerHTML     = `<span style="color:var(--green);font-size:.78rem">✓ Économisez ${(entM - entA) * 12}€/an</span>`;
+    document.getElementById('priceMaxAmount').textContent = maxA + '€';
+    document.getElementById('priceMaxPer').textContent    = '/mois (facturé annuellement)';
+    document.getElementById('priceMaxNote').innerHTML     = `<span style="color:var(--green);font-size:.78rem">✓ Économisez ${(maxM - maxA) * 12}€/an</span>`;
   } else {
     document.getElementById('priceProAmount').textContent = proM + '€';
     document.getElementById('priceProPer').textContent    = '/mois par utilisateur';
@@ -512,6 +516,9 @@ function setPricingPeriod(period) {
     document.getElementById('priceEntAmount').textContent = entM + '€';
     document.getElementById('priceEntPer').textContent    = '/mois par utilisateur';
     document.getElementById('priceEntNote').textContent   = 'Pour les grandes équipes';
+    document.getElementById('priceMaxAmount').textContent = maxM + '€';
+    document.getElementById('priceMaxPer').textContent    = '/mois';
+    document.getElementById('priceMaxNote').textContent   = 'Utilisation illimitée';
   }
 }
 
@@ -972,12 +979,12 @@ const STRIPE_PRODUCTS = {
 const PLAN_LABELS = {
   'pro':        { name: 'Pro',        mensuel: '57€/mois',  annuel: '48€/mois' },
   'entreprise': { name: 'Entreprise', mensuel: '147€/mois', annuel: '125€/mois' },
+  'max':        { name: 'Max',        mensuel: '457€/mois', annuel: '388€/mois' },
 };
 
 let currentPurchasePlanKey = '';
 
 function openPurchaseModal(planKey) {
-  if (planKey === 'sur-devis') { showPage('contact'); return; }
   currentPurchasePlanKey = planKey;
   const period   = state.pricingAnnual ? 'annuel' : 'mensuel';
   const label    = PLAN_LABELS[planKey];
